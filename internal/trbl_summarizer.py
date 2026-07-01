@@ -467,7 +467,7 @@ def log_error(msg: str):
 # File handling and setup
 #
 #
-@st.cache_data
+@lru_cache
 def load_all_file():
     return pd.read_csv(INPUT_CSV, skiprows=ALL_SHEET_HEADER_SIZE)
 
@@ -618,7 +618,6 @@ def check_for_tag_errors(df: pd.DataFrame):
 
     return
 
-
 @lru_cache
 def load_data_for_site(site: str):
     """
@@ -740,7 +739,7 @@ def load_pm_data(site: str) -> pd.DataFrame:
     return df
 
 
-@st.cache_data
+@lru_cache
 def load_summary_data() -> pd.DataFrame:
     # Load the summary data and prep it for graphing.
     df = pd.read_csv(INPUT_CSV, skiprows=ALL_SHEET_HEADER_SIZE)
@@ -962,7 +961,6 @@ def get_pretty_name_for_site(site: str) -> str:
 # Perform the following operations to clean up the data:
 #   - Drop sites that aren't needed, so we're passing around less data
 #   - Exclude any data where the year of the data doesn't match the target year
-@st.cache_data
 def clean_data(df: pd.DataFrame, site_list: list) -> pd.DataFrame:
     # Drop sites we don't need
     df_clean = pd.DataFrame()
@@ -1287,7 +1285,6 @@ def set_global_theme():
         "font.family": GRAPH_FONT,
         "font.size": AXIS_FONT_SIZE,
         "font.stretch": "normal",
-        "font.weight": "light",
         "xtick.bottom": "False",
         "xtick.labelbottom": "False",
         "ytick.left": "False",
@@ -1466,8 +1463,8 @@ def draw_legend(cmap: dict, make_all_graphs: bool, save_files: bool):
 
     plt.subplots_adjust(left=0, right=1, top=1, bottom=0, wspace=0, hspace=0)
 
-    if not make_all_graphs:
-        st.pyplot(fig)
+    # if not make_all_graphs:
+    #     st.pyplot(fig)
 
     if save_files:
         output_cmap()
@@ -1624,7 +1621,7 @@ def file_missing(site, graph_type, type):
     return True
 
 
-@st.cache_data(show_spinner=False)
+@lru_cache
 def load_recordings_hourly(
     parquet_path: Path, site_col: str, date_col: str, hour_col: str, recordings_col: str
 ) -> pd.DataFrame:
@@ -1906,9 +1903,7 @@ def create_graph(
 
         # Adjust colors so that lighter values are more visible
         # gamma < 1 brightens lows, closer to 0 is more extreme
-        gamma = float(
-            st.session_state.get("gamma", 1.0)
-        )  # 1=default if slider not created yet
+        gamma = 0.85
         vmin = 0.001  # slightly above 0 so that 0 values get the 'under' color
         vmax = 1  # as we're normalizing the data, the ranges will all be 0-1
         norm = colors.PowerNorm(gamma=gamma, vmin=vmin, vmax=vmax)
@@ -2675,13 +2670,13 @@ def output_graph(
     data_to_graph=True,
 ):
     if data_to_graph:
-        if make_all_graphs:  # Don't write the graphs to the screen if we're doing them all to speed it up
-            pass
-        else:
-            # If there is data in the graph, then write it to the screen if we are doing one graphic at a time
-            if graph.get_axes():
-                # st_image_figure(graph)
-                st.pyplot(graph)
+        # if make_all_graphs:  # Don't write the graphs to the screen if we're doing them all to speed it up
+        #     pass
+        # else:
+        #     # If there is data in the graph, then write it to the screen if we are doing one graphic at a time
+        #     if graph.get_axes():
+        #         # st_image_figure(graph)
+        #         st.pyplot(graph)
 
         # Save it to disk if we are either doing all the graphs, or the Save checkbox is checked
         if make_all_graphs or save_files:
@@ -2696,15 +2691,7 @@ def output_graph(
         # No data, so show a message instead.
         save_figure(site, graph_type, graph, delete_only=True)
         site_name_text = f'<p style="font-family:sans-serif; font-size: 16px;"><b>{graph_type}</b></p>'
-        st.write(site_name_text, unsafe_allow_html=True)
-        st.write("No data available")
-
-
-def output_text(text: str, make_all_graphs: bool):
-    if make_all_graphs:
-        st.write(text)
-    else:
-        st.subheader(text)
+        print(f"No data available: {site_name_text}")
 
 
 #
@@ -3852,27 +3839,25 @@ def main():
         # ------------------------------------------------------------------------------------------------
         # DISPLAY
         pretty_site_name = get_pretty_name_for_site(site)
-        if make_all_graphs:
-            st.subheader(
-                f"{pretty_site_name} [{str(site_counter)} of {str(len(target_sites))}]"
-            )
-        else:
-            st.subheader(f"{pretty_site_name}")
+        # if make_all_graphs:
+        #     st.subheader(
+        #         f"{pretty_site_name} [{str(site_counter)} of {str(len(target_sites))}]"
+        #     )
+        # else:
+        #     st.subheader(f"{pretty_site_name}")
 
         if not pd.isna(summary_row["Skip Site"].item()):
-            st.write(
-                f":red-background[Duplicate site: {summary_row['Comment for Skip Site'].item()}]"
-            )
+            print(f"Duplicate site: {summary_row['Comment for Skip Site'].item()}")
 
         if len(error_msgs):
             for error_msg in error_msgs:
-                st.write(f":red-background[{error_msg}]")
+                print(f"{error_msg}")
 
         if not make_all_graphs:
             if show_station_info_checkbox:
                 show_station_info(summary_row)
             ratio_str = get_ratio(site)
-            st.success(f"{ratio_str}")
+            print(f"{ratio_str}")
 
         # list of month positions in the graphs
         month_locs = {}
