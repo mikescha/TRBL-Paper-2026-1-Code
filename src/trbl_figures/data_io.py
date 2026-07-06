@@ -6,7 +6,6 @@ from pathlib import Path
 import pandas as pd
 
 from trbl_figures import constants as C
-from trbl_figures.pivots import clean_data
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DATA_DIR = PROJECT_ROOT / "data"
@@ -22,6 +21,37 @@ def empty_pm_data_frame() -> pd.DataFrame:
         },
         index=pd.DatetimeIndex([], name=C.DATE_COL),
     )
+
+
+# Perform the following operations to clean up the data:
+#   - Drop sites that aren't needed, so we're passing around less data
+#   - Exclude any data where the year of the data doesn't match the target year
+def clean_data(df: pd.DataFrame, site_list: list) -> pd.DataFrame:
+    # Drop sites we don't need
+    df_clean = pd.DataFrame()
+    for site in site_list:
+        if C.SITE not in df.columns:
+            break
+
+        # Ensure anything outside this year gets dropped
+        target_year = site[0:4]
+        df_site = df[df[C.SITE] == site]
+        df_filtered = df_site.loc[target_year]
+
+        df_filtered = df_filtered.sort_index(ascending=True)
+        df_clean = pd.concat([df_clean, df_filtered])
+
+    # We need to preserve the diff between no data and 0 tags. But, we have to also make everything
+    # integers for later processing. So, we'll replace the hyphens with a special value and then just
+    # realize that we can't do math on this column any more without excluding it. Picked -100 (missing_data_flag) because
+    # if we do do math then the answer will be obviously wrong!
+    df_clean = df_clean.replace("---", C.MISSING_DATA_FLAG)
+
+    # For each type of song, convert its column to be numeric instead of a string so we can run pivots
+    for s in C.ALL_SONGS + C.ALL_TAGS:
+        if C.DATA_COL[s] in df_clean.columns:
+            df_clean[C.DATA_COL[s]] = pd.to_numeric(df_clean[C.DATA_COL[s]])
+    return df_clean
 
 
 @lru_cache
@@ -186,4 +216,7 @@ def load_pm_data(site: str) -> pd.DataFrame:
 
     df.set_index(C.DATE_COL, inplace=True)
 
+    # TODO THIS NEEDS TO GET CHANGED BECAUSE FOR SITES THAT WERE MERGED, THEY DON'T HAVE THE SAME SITE
+    df = clean_data(df, [site])  
+    
     return df

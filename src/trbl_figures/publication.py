@@ -5,7 +5,7 @@ from typing import Any
 import pandas as pd
 
 from internal import trbl_summarizer as legacy  # noqa: E402
-from trbl_figures import data_io
+from trbl_figures import data_io, pivots
 from trbl_figures.manifest import filter_manifest, read_manifest
 from trbl_figures.metadata import (
     build_key_dates,
@@ -64,7 +64,7 @@ def build_pattern_matching_panel(
     rec_norm: pd.Series,
 ) -> tuple[str, Any | None]:
     """Build and save the pattern-matching panel if data exists."""
-    pt_pm, have_pm_data = legacy.do_pattern_matching(
+    pt_pm, have_pm_data = pivots.do_pattern_matching(
         site=site,
         date_range_dict=date_range_dict
     )
@@ -99,7 +99,7 @@ def build_mini_manual_panel(
     missing_days: pd.DatetimeIndex,
 ) -> tuple[str, Any | None]:
     """Build and save the mini-manual panel if data exists."""
-    pt_mini_manual, have_mini_manual_data = legacy.do_mini_manual(
+    pt_mini_manual, have_mini_manual_data = pivots.do_mini_manual(
         df_core,
         date_range_dict,
     )
@@ -134,7 +134,7 @@ def build_manual_panel(
     rec_norm: pd.Series,
 ) -> tuple[str, Any | None]:
     """Build and save the manual daily-review panel if data exists."""
-    pt_manual, have_manual_data = legacy.do_manual(df_core, date_range_dict)
+    pt_manual, have_manual_data = pivots.do_manual(df_core, date_range_dict)
 
     if not have_manual_data or pt_manual.empty:
         return "no_data", None
@@ -171,7 +171,7 @@ def build_edge_panel(
     missing_days: pd.DatetimeIndex,
 ) -> tuple[str, Any | None]:
     """Build and save the Edge/hatchling panel if data exists."""
-    pt_edge, have_edge_data = legacy.do_edge(df_core, date_range_dict, site)
+    pt_edge, have_edge_data = pivots.do_edge(df_core, date_range_dict, site)
     edge_recs_per_day = legacy.get_recs_per_edge_day(df_core, date_range_dict)
 
     if not have_edge_data or pt_edge.empty:
@@ -217,7 +217,7 @@ def build_one_site(site: str, row: pd.Series, summary_df: pd.DataFrame) -> dict:
         status["error"] = "No source data found for site"
         return status
 
-    df_core = legacy.filter_to_core_hours(df_site, hour_col=legacy.HOUR)
+    df_core = pivots.filter_to_core_hours(df_site, hour_col=legacy.HOUR)
 
     rec_norm = df_core.groupby(level=legacy.DATE_COL)["core_hour"].nunique()
 
@@ -227,9 +227,7 @@ def build_one_site(site: str, row: pd.Series, summary_df: pd.DataFrame) -> dict:
         site_summary_dict=site_summary_dict,
     )
 
-    missing_days: pd.DatetimeIndex = pd.DatetimeIndex(
-        legacy.get_missing_days(df_core, date_range_dict)
-    )
+    missing_days = pivots.get_missing_days(df_core, date_range_dict)
 
     key_dates = build_key_dates(site_summary_dict)
 
