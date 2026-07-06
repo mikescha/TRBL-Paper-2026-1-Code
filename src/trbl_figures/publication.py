@@ -6,8 +6,12 @@ import pandas as pd
 
 from internal import trbl_summarizer as legacy  # noqa: E402
 from trbl_figures import data_io
-from trbl_figures.date_ranges import get_publication_date_range
 from trbl_figures.manifest import filter_manifest, read_manifest
+from trbl_figures.metadata import (
+    build_key_dates,
+    get_publication_date_range,
+    get_site_summary_dict,
+)
 
 DEFAULT_INVENTORY_NAME = "figure_inventory.csv"
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -36,46 +40,6 @@ def configure_legacy_paths(data_dir: Path, output_dir: Path) -> None:
     legacy.ERROR_FILE = PROJECT_ROOT / "outputs" / "grapher_errors.txt"
 
 
-def build_key_dates(site_summary_dict: dict) -> dict:
-    """Build the key-date dictionary expected by legacy.create_graph."""
-    key_dates: dict[str, Any] = {}
-
-    key_dates[legacy.SUMMARY_FIRST_REC] = site_summary_dict[legacy.SUMMARY_FIRST_REC]
-    key_dates[legacy.SUMMARY_LAST_REC] = site_summary_dict[legacy.SUMMARY_LAST_REC]
-
-    for pulse in legacy.PULSES:
-        if pulse not in site_summary_dict:
-            continue
-
-        key_dates[pulse] = {}
-
-        mc_date = site_summary_dict[pulse][legacy.PHASE_MALE_CHORUS]["start"]
-        inc_date = site_summary_dict[pulse][legacy.PHASE_INC]["start"]
-        hatch_date = site_summary_dict[pulse][legacy.PHASE_BROOD]["start"]
-        fledge_start_date = site_summary_dict[pulse][legacy.PHASE_FLDG]["start"]
-        dispersal = site_summary_dict[pulse][legacy.PHASE_FLDG]["end"]
-
-        if "abandon" in site_summary_dict[pulse]:
-            key_dates[pulse][legacy.ABANDONED] = site_summary_dict[pulse]["abandon"]
-
-        if pd.notna(mc_date):
-            key_dates[pulse][legacy.PULSE_MC_START] = mc_date
-
-        if pd.notna(inc_date):
-            key_dates[pulse][legacy.PULSE_INC_START] = inc_date
-
-        if pd.notna(hatch_date):
-            key_dates[pulse][legacy.PULSE_HATCH] = hatch_date
-
-        if pd.notna(fledge_start_date):
-            key_dates[pulse][legacy.PULSE_FIRST_FLDG] = fledge_start_date
-
-        if pd.notna(dispersal):
-            key_dates[pulse][legacy.PULSE_LAST_FLDG] = dispersal
-
-    return key_dates
-
-
 def save_component(site: str, graph_type: str, fig: Any) -> None:
     """Save one graph component using the legacy save function."""
     legacy.save_figure(
@@ -85,16 +49,6 @@ def save_component(site: str, graph_type: str, fig: Any) -> None:
         make_all_graphs=True,
         do_aligned_dates=False,
     )
-
-
-def get_site_summary_dict(site: str, summary_df: pd.DataFrame) -> dict:
-    """Return the processed All.csv summary dictionary for one site."""
-    summary_row = summary_df[summary_df.iloc[:, 1] == site]
-
-    if summary_row.empty:
-        raise ValueError(f"Site {site!r} was not found in All.csv.")
-
-    return legacy.process_site_summary_data(summary_row)
 
 
 def should_build_panel(row: pd.Series, panel_name: str) -> bool:

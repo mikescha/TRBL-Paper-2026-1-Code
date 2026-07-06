@@ -446,3 +446,115 @@
 06-Jul-26 18:03:04:    > Rush_Ranch-2017-06-29_16-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
 06-Jul-26 18:03:04:    > Rush_Ranch-2017-06-29_17-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
 06-Jul-26 18:03:04:    > Rush_Ranch-2017-06-29_19-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38: check_edge_cols_for_errors: Found 111 rows with -100 values in edge columns, which indicates missing data that should have been cleaned up. See log for details.
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-04-29_07-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-04-29_08-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-04-29_09-20.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-04-30_08-20.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-04-30_09-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-04-30_10-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-04-30_11-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-04-30_12-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-04-30_13-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-04-30_14-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-04-30_15-20.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-04-30_16-20.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-04-30_17-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-04-30_18-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-04-30_19-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-01_07-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-01_11-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-01_11-20.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-01_11-40.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-01_12-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-01_12-40.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-01_13-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-01_13-20.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-01_14-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-01_14-20.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-01_14-40.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-01_15-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-01_15-20.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-01_15-40.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-01_16-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-01_17-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-01_18-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-01_19-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-26_10-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-26_11-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-26_12-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-26_13-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-26_14-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-26_15-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-26_16-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-26_17-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-27_11-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-27_12-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-27_13-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-27_14-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-27_15-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-27_16-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-27_17-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-30_10-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-30_11-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-30_12-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-30_13-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-30_14-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-30_15-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-30_16-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-30_17-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-30_18-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-30_19-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-31_08-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-31_09-20.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-31_10-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-31_11-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Alternative Song 2>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-31_12-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-31_13-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-31_14-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-31_15-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-31_16-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-31_17-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-31_18-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-05-31_19-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-01_11-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-01_12-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-01_13-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Alternative Song 2>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-01_14-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-01_15-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-01_16-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-01_17-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-02_10-00.flac: val<Agelaius tricolor/Alternative Song 2>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-02_11-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Alternative Song 2>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-02_12-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-02_13-00.flac: val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-02_14-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-02_15-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Alternative Song 2>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-02_16-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-02_17-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-27_10-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-27_11-00.flac: val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-27_12-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-27_13-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-27_14-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-27_15-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-27_16-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-27_17-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-28_09-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Alternative Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-28_10-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-28_11-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-28_12-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-28_13-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-28_14-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-28_15-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-28_16-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-28_17-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-29_10-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-29_11-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-29_12-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-29_13-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-29_14-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Alternative Song 2>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-29_15-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-29_16-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-29_17-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
+06-Jul-26 18:07:38:    > Rush_Ranch-2017-06-29_19-00.flac: val<Agelaius tricolor/Common Song>=-100, val<Agelaius tricolor/Courtship Song>=-100, val<Agelaius tricolor/Simple Call 2>=-100
