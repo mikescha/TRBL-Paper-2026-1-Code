@@ -502,7 +502,7 @@ def fix_bad_values(df: pd.DataFrame):
             log_error(f'fix_bad_values: Column {col} contains "---"')
             df[col] = df[col].replace(-100, 0)
 
-
+#TODO is there any error checking we can do on the tags? If so, put it here
 def check_edge_cols_for_errors(df: pd.DataFrame, tag_map: dict) -> bool:
     error_found = False
     error_label = "check_edge_cols_for_errors"
@@ -526,26 +526,6 @@ def check_edge_cols_for_errors(df: pd.DataFrame, tag_map: dict) -> bool:
                         ]
                     )
                 )
-
-        # Confirm that if a value is >=1 then the key == 1
-        for key, value in tag_map.items():
-            if key in df.columns and value in df.columns:
-                errors = df.loc[(df[value] >= 1) & (df[key] != 1)]
-                if len(errors):
-                    error_found = True
-                    log_error(
-                        f"{error_label}: Found recordings where {value} is >= 1 but the corresponding {key} tag is not 1"
-                    )
-                    for i, row in errors.iterrows():
-                        log_error(
-                            f"   > {row['filename']}: {value}={row[value]}, {key}={row[key]}"
-                        )
-            else:
-                log_error(
-                    f"{error_label}: Column {key} or {value} not found in DataFrame"
-                )
-                error_found = True
-
     # Remove any -100 (were "---" in the original file, converted to numbers in the first cleaning pass) and log it, if there are any
     fix_bad_values(df)
 

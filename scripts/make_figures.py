@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import sys
-from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -140,67 +139,59 @@ def configure_legacy_paths(data_dir: Path, output_dir: Path) -> None:
     legacy.ERROR_FILE = PROJECT_ROOT / "outputs" / "grapher_errors.txt"
 
 
-def coerce_date_or_none(value: Any) -> date | None:
-    """Convert a manifest/config date value to a Python date, or None."""
+def coerce_date_or_none(value: Any) -> pd.Timestamp | None:
+    """Convert a date-like value to a normalized Timestamp, or None."""
     if value is None or pd.isna(value) or str(value).strip() == "":
         return None
 
-    return pd.to_datetime(value).date()
+    return pd.to_datetime(value).normalize()
 
 
 def get_publication_date_range(
-    df: pd.DataFrame,
+    site_summary_dict: dict,
     *,
-    date_index_name: str,
     start_date: Any = None,
     end_date: Any = None,
 ) -> dict:
     """
-    Return the date range used for publication figure generation.
+    Return the publication graph date range.
 
-    Defaults to the first and last recording dates in the filtered data.
-    Optional start/end values can come from the figure manifest later.
+    Defaults to All.csv first/last recording dates to preserve legacy graphing behavior and avoid
+    field-note/manual recordings extending the plotted range.
     """
-    if df.empty:
-        raise ValueError("Cannot determine date range from an empty dataframe.")
+    all_csv_start = coerce_date_or_none(site_summary_dict[legacy.SUMMARY_FIRST_REC])
+    all_csv_end = coerce_date_or_none(site_summary_dict[legacy.SUMMARY_LAST_REC])
 
-    if date_index_name not in df.index.names:
+    start = coerce_date_or_none(start_date) or all_csv_start
+    end = coerce_date_or_none(end_date) or all_csv_end
+
+    if start is None or end is None:
         raise ValueError(
-            f"Expected dataframe index to include {date_index_name!r}. "
-            f"Found index names: {df.index.names}"
+            "Could not determine publication date range from All.csv "
+            f"values: start={all_csv_start!r}, end={all_csv_end!r}"
         )
 
-    dates = pd.to_datetime(df.index.get_level_values(date_index_name)).date
-
-    data_start = min(dates)
-    data_end = max(dates)
-
-    start = coerce_date_or_none(start_date) or data_start
-    end = coerce_date_or_none(end_date) or data_end
-
     if start > end:
-        raise ValueError(f"Start date {start} is after end date {end}.")
+        raise ValueError(f"Start date {start.date()} is after end date {end.date()}.")
 
     return {
-        "start": start,
-        "end": end,
+        "start": start.date(),
+        "end": end.date(),
     }
 
 
-def build_key_dates(site: str, summary_df: pd.DataFrame) -> dict:
-    """
-    Build the key-date dictionary expected by legacy.create_graph().
-
-    This is copied from the old Streamlit-era workflow, but isolated here so
-    we can later move it into src/trbl_figures/metadata.py.
-    """
+def get_site_summary_dict(site: str, summary_df: pd.DataFrame) -> dict:
+    """Return the processed All.csv summary dictionary for one site."""
     summary_row = summary_df[summary_df.iloc[:, 1] == site]
 
     if summary_row.empty:
-        return {}
+        raise ValueError(f"Site {site!r} was not found in All.csv.")
 
-    site_summary_dict = legacy.process_site_summary_data(summary_row)
+    return legacy.process_site_summary_data(summary_row)
 
+
+def build_key_dates(site_summary_dict: dict) -> dict:
+    """Build the key-date dictionary expected by legacy.create_graph."""
     key_dates: dict[str, Any] = {}
 
     key_dates[legacy.SUMMARY_FIRST_REC] = site_summary_dict[legacy.SUMMARY_FIRST_REC]
@@ -418,19 +409,19 @@ def build_one_site(site: str, row: pd.Series, summary_df: pd.DataFrame) -> dict:
 
     df_core = legacy.filter_to_core_hours(df_site, hour_col=legacy.HOUR)
 
-    # Denominator for normalized heatmaps:
-    # number of core hours with at least one recording on each date.
     rec_norm = df_core.groupby(level=legacy.DATE_COL)["core_hour"].nunique()
 
+    site_summary_dict = get_site_summary_dict(site, summary_df)
+
     date_range_dict = get_publication_date_range(
-        df=df_core,
-        date_index_name=legacy.DATE_COL,
+        site_summary_dict=site_summary_dict,
     )
 
     missing_days: pd.DatetimeIndex = pd.DatetimeIndex(
         legacy.get_missing_days(df_core, date_range_dict)
     )
-    key_dates = build_key_dates(site, summary_df)
+
+    key_dates = build_key_dates(site_summary_dict)
 
     month_locs = {}
 
