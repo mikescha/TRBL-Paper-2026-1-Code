@@ -5,6 +5,7 @@ from typing import Any
 import pandas as pd
 
 from internal import trbl_summarizer as legacy  # noqa: E402
+from trbl_figures import data_io
 from trbl_figures.date_ranges import get_publication_date_range
 from trbl_figures.manifest import filter_manifest, read_manifest
 
@@ -256,7 +257,7 @@ def build_one_site(site: str, row: pd.Series, summary_df: pd.DataFrame) -> dict:
         "error": "",
     }
 
-    df_site = legacy.load_data_for_site(site)
+    df_site = data_io.load_site_data(site)
 
     if df_site.empty:
         status["error"] = "No source data found for site"
@@ -393,7 +394,7 @@ def build_figures(
 
         return pd.DataFrame()
 
-    summary_df = legacy.load_summary_data()
+    summary_df = data_io.load_summary_data()
 
     results = []
 
