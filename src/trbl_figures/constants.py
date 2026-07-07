@@ -24,29 +24,67 @@ TAG_WSM = "tag_wsm"
 TAG_MHE = "tag_mhe"
 TAG_MHM = "tag_mhm"
 TAG_MHH = "tag_mhh"
-TAG_MHE2 = "tag_mhe2"
 TAG_WS = "tag_ws"
 TAG_MH = "tag_mh"
 TAG_P1N = "tag_p1n"
 TAG_P2N = "tag_p2n"
 TAG_P3N = "tag_p3n"
 TAG_P4N = "tag_p4n"
-ALTSONG1 = "altsong1"
 TAG_YNC_P2 = "tag<YNC-p2>"
 TAG_YNC_P3 = "tag<YNC-p3>"
 TAG_YNC_P4 = "tag<YNC-p4>"
+
+MALE_SONG = "malesong"
+ALTSONG1 = "altsong1"
+ALTSONG2 = "altsong2"
+COURT_SONG = "courtsong"
+SIMPLE_CALL2 = "simplecall2"
+
+DATA_COL = {
+    FILENAME: "filename",
+    SITE: "site",
+    "day": "day",
+    "month": "month",
+    "year": "year",
+    HOUR: "hour",
+    DATE_COL: "date",
+    TAG_YNC_P2: "tag<YNC-p2>",  # Young nestling call pulse 2
+    TAG_YNC_P3: "tag<YNC-p3>",  # Young nestling call pulse 3
+    TAG_YNC_P4: "tag<YNC-p4>",  # Young nestling call pulse 4
+    "tag_p1a": "tag<p1a>",
+    "tag_p1f": "tag<p1f>",
+    TAG_P1N: "tag<p1n>",
+    "tag_p2f": "tag<p2f>",
+    TAG_P2N: "tag<p2n>",
+    TAG_P3N: "tag<p3n>",
+    TAG_P4N: "tag<p4n>",
+    "tag_mhe2": "tag<reviewed-MH-e2>",
+    "tag_mhe": "tag<reviewed-MH-e>",
+    TAG_MHH: "tag<reviewed-MH-h>",
+    TAG_MHM: "tag<reviewed-MH-m>",
+    TAG_MH: "tag<reviewed-MH>",
+    TAG_WSE: "tag<reviewed-WS-e>",
+    TAG_WSM: "tag<reviewed-WS-m>",
+    TAG_WS: "tag<reviewed-WS>",
+    "tag_": "tag<reviewed>",
+    ALTSONG2: "val<Agelaius tricolor/Alternative Song 2>",
+    ALTSONG1: "val<Agelaius tricolor/Alternative Song>",
+    MALE_SONG: "val<Agelaius tricolor/Common Song>",
+    COURT_SONG: "val<Agelaius tricolor/Courtship Song>",
+    SIMPLE_CALL2: "val<Agelaius tricolor/Simple Call 2>",
+    "val<sp11/Simple Call>": "val<sp11/Simple Call>",
+    "val<sp22/Simple Call>": "val<sp22/Simple Call>",
+}
 
 START = "start"
 END = "end"
 
 # Graph names
-GRAPH_PM = legacy.GRAPH_PM
-GRAPH_MINIMAN = legacy.GRAPH_MINIMAN
-GRAPH_MANUAL = legacy.GRAPH_MANUAL
-GRAPH_EDGE = legacy.GRAPH_EDGE
+GRAPH_MANUAL = "Manual Analysis"
+GRAPH_MINIMAN = "MiniMan"
+GRAPH_EDGE = "Edge Analysis"
+GRAPH_PM = "Pattern Matching Analysis"
 
-# PM / manual / edge constants
-DATA_COL = legacy.data_col
 PM_FILE_TYPES = legacy.PM_FILE_TYPES
 SONG_COLS = legacy.SONG_COLS
 EDGE_COLS = legacy.EDGE_COLS
@@ -74,23 +112,11 @@ ALL_TAGS = legacy.ALL_TAGS
 CMAP = legacy.CMAP
 CMAP_PM = legacy.CMAP_PM
 
-# Summary / phase constants
-SUMMARY_FIRST_REC = legacy.SUMMARY_FIRST_REC
-SUMMARY_LAST_REC = legacy.SUMMARY_LAST_REC
-SUMMARY_NUMERIC_COLS = legacy.SUMMARY_NUMERIC_COLS
-
-PULSES = legacy.PULSES
 
 PHASE_MALE_CHORUS = legacy.PHASE_MALE_CHORUS
 PHASE_INC = legacy.PHASE_INC
 PHASE_BROOD = legacy.PHASE_BROOD
 PHASE_FLDG = legacy.PHASE_FLDG
-
-PULSE_MC_START = legacy.PULSE_MC_START
-PULSE_INC_START = legacy.PULSE_INC_START
-PULSE_HATCH = legacy.PULSE_HATCH
-PULSE_FIRST_FLDG = legacy.PULSE_FIRST_FLDG
-PULSE_LAST_FLDG = legacy.PULSE_LAST_FLDG
 
 ABANDONED = legacy.ABANDONED
 
@@ -121,3 +147,31 @@ EFFORT_THRESHOLD_RATIOS = {
     "nbc": (3, 13),
     "fbc": (3, 13),
 }
+
+# Columns in all.csv
+PULSE_COUNT = "pulse_count"
+ABANDONED = "abandon"
+PULSES = ["p1", "p2", "p3", "p4"]
+SUMMARY_FIRST_REC = "First Recording"
+SUMMARY_LAST_REC = "Last Recording"
+SUMMARY_EDGE_DATES = [SUMMARY_FIRST_REC, SUMMARY_LAST_REC]
+PULSE_MC_START = "mcstart"
+PULSE_MC_END = "mcend"
+PULSE_INC_START = "incstart"
+PULSE_HATCH = "hatch"
+PULSE_FIRST_FLDG = "fledgestart"
+PULSE_LAST_FLDG = "fledgedisp"
+PULSE_DATE_TYPES = [
+    PULSE_MC_START,
+    PULSE_MC_END,
+    PULSE_INC_START,
+    PULSE_HATCH,
+    PULSE_FIRST_FLDG,
+    PULSE_LAST_FLDG,
+    ABANDONED,
+]
+SUMMARY_NUMERIC_COLS = ["Site ID", "Altitude", "Number of Recordings"]
+
+# Potential values in all.csv 
+CONTINUOUS = "continuous"
+ND_STRING = "ND"
