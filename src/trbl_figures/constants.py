@@ -108,10 +108,6 @@ ALTSONG2 = legacy.ALTSONG2
 ALL_SONGS = legacy.ALL_SONGS
 ALL_TAGS = legacy.ALL_TAGS
 
-# Color maps
-CMAP = legacy.CMAP
-CMAP_PM = legacy.CMAP_PM
-
 
 PHASE_MALE_CHORUS = legacy.PHASE_MALE_CHORUS
 PHASE_INC = legacy.PHASE_INC
@@ -175,3 +171,13 @@ SUMMARY_NUMERIC_COLS = ["Site ID", "Altitude", "Number of Recordings"]
 # Potential values in all.csv 
 CONTINUOUS = "continuous"
 ND_STRING = "ND"
+
+
+# Color maps
+CMAP = legacy.CMAP
+CMAP_PM = legacy.CMAP_PM
+
+DPI = 300
+
+GRAPH_FONT = "Franklin Gothic Book"
+GRAPH_FONT_TTF = "FRABK.TTF"  # used for output to the file using PIL

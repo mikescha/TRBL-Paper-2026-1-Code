@@ -24,8 +24,6 @@ from trbl_figures import constants as C
 from trbl_figures.composite import output_cmap
 from trbl_figures.date_utils import convert_to_datetime
 
-DPI = 300
-
 # Figure width and height, values in inches
 FIG_W = 6.5
 FIG_H = 1
@@ -34,9 +32,6 @@ GRAPH_LEFT_PADDING = 0.1
 TITLE_FONT_SIZE = 13
 AXIS_FONT_SIZE = 8
 LEGEND_FONT_SIZE = 8
-
-GRAPH_FONT = "Franklin Gothic Book"
-GRAPH_FONT_TTF = "FRABK.TTF"  # used for output to the file using PIL
 
 NO_DATA_COLOR = "lightgray"
 HATCH_PATTERN = "////////"
@@ -74,7 +69,7 @@ def plot_title(fig: Figure, title: str, x: float = 0.0, y: float = 1.0):
         x=x,
         y=y,
         fontsize=TITLE_FONT_SIZE,
-        fontfamily=GRAPH_FONT,
+        fontfamily=C.GRAPH_FONT,
         horizontalalignment="left",
         verticalalignment="top",
     )
@@ -127,7 +122,7 @@ def add_text(ax, x, text, color):
         x + 0.5,
         0.5,
         text,
-        font=GRAPH_FONT,
+        font=C.GRAPH_FONT,
         fontsize=8,
         fontstyle="italic",
         color=color,
@@ -161,7 +156,7 @@ def draw_axis_labels(
         y_axes: float,
         *,
         fontsize=AXIS_FONT_SIZE,
-        fontfamily=GRAPH_FONT,
+        fontfamily=C.GRAPH_FONT,
         pad_px=4,
         **text_kwargs,
     ):
@@ -345,8 +340,8 @@ def set_global_theme() -> None:
     line_color = "black"
     line_width = "1.5"
     custom_params = {
-        "figure.dpi": DPI,
-        "font.family": GRAPH_FONT,
+        "figure.dpi": C.DPI,
+        "font.family": C.GRAPH_FONT,
         "font.size": AXIS_FONT_SIZE,
         "font.stretch": "normal",
         "xtick.bottom": "False",
@@ -810,7 +805,7 @@ def draw_legend(cmap: dict, make_all_graphs: bool, save_files: bool):
             transform=ax.transAxes,
             va="center",
             ha="left",
-            fontfamily=GRAPH_FONT,
+            fontfamily=C.GRAPH_FONT,
             fontsize=LEGEND_FONT_SIZE,
         )
         ax.set_axis_off()
@@ -842,7 +837,7 @@ def draw_legend(cmap: dict, make_all_graphs: bool, save_files: bool):
             transform=ax.transAxes,
             va="center",
             ha="left",
-            fontfamily=GRAPH_FONT,
+            fontfamily=C.GRAPH_FONT,
             fontsize=LEGEND_FONT_SIZE,
         )
         ax.set_axis_off()

@@ -5,7 +5,7 @@ from typing import Any
 import pandas as pd
 
 from internal import trbl_summarizer as legacy  # noqa: E402
-from trbl_figures import data_io, graph_core, pivots
+from trbl_figures import composite, data_io, graph_core, pivots
 from trbl_figures.manifest import filter_manifest, read_manifest
 from trbl_figures.metadata import (
     build_key_dates,
@@ -42,7 +42,7 @@ def configure_legacy_paths(data_dir: Path, output_dir: Path) -> None:
 
 def save_component(site: str, graph_type: str, fig: Any) -> None:
     """Save one graph component using the legacy save function."""
-    legacy.save_figure(
+    composite.save_figure(
         site=site,
         graph_type=graph_type,
         graph=fig,
@@ -297,7 +297,7 @@ def build_one_site(site: str, row: pd.Series, summary_df: pd.DataFrame) -> dict:
                     save_files=True,
                 )
 
-            legacy.combine_unaligned_images(
+            composite.combine_unaligned_images(
                 site=site,
                 month_locs=month_locs,
                 include_weather=False,
