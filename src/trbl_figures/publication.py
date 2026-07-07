@@ -5,7 +5,7 @@ from typing import Any
 import pandas as pd
 
 from internal import trbl_summarizer as legacy  # noqa: E402
-from trbl_figures import data_io, pivots
+from trbl_figures import data_io, graph_core, pivots
 from trbl_figures.manifest import filter_manifest, read_manifest
 from trbl_figures.metadata import (
     build_key_dates,
@@ -72,7 +72,7 @@ def build_pattern_matching_panel(
     if not have_pm_data or pt_pm.empty:
         return "no_data", None
 
-    fig = legacy.create_graph(
+    fig = graph_core.create_graph(
         site=site,
         df=pt_pm,
         row_names=legacy.PM_FILE_TYPES,
@@ -107,7 +107,7 @@ def build_mini_manual_panel(
     if not have_mini_manual_data or pt_mini_manual.empty:
         return "no_data", None
 
-    fig = legacy.create_graph(
+    fig = graph_core.create_graph(
         site=site,
         df=pt_mini_manual,
         row_names=legacy.SONG_COLS,
@@ -145,7 +145,7 @@ def build_manual_panel(
         legacy.data_col[legacy.ALTSONG1],
     ]
 
-    fig = legacy.create_graph(
+    fig = graph_core.create_graph(
         site=site,
         df=pt_manual,
         row_names=manual_rows,
@@ -179,7 +179,7 @@ def build_edge_panel(
 
     cmap_edge = {name: "Blues" for name in legacy.EDGE_COLS}
 
-    fig = legacy.create_graph(
+    fig = graph_core.create_graph(
         site=site,
         df=pt_edge,
         row_names=pt_edge.index.to_list(),
@@ -244,7 +244,7 @@ def build_one_site(site: str, row: pd.Series, summary_df: pd.DataFrame) -> dict:
         status["pattern_matching"] = panel_status
 
         if pt is not None and not month_locs:
-            month_locs = legacy.get_month_locs(pt.columns)
+            month_locs = graph_core.get_month_locs(pt.columns)
 
     if should_build_panel(row, "mini_manual"):
         panel_status, pt = build_mini_manual_panel(
@@ -258,7 +258,7 @@ def build_one_site(site: str, row: pd.Series, summary_df: pd.DataFrame) -> dict:
         status["mini_manual"] = panel_status
 
         if pt is not None and not month_locs:
-            month_locs = legacy.get_month_locs(pt.columns)
+            month_locs = graph_core.get_month_locs(pt.columns)
 
     if should_build_panel(row, "manual"):
         panel_status, pt = build_manual_panel(
@@ -272,7 +272,7 @@ def build_one_site(site: str, row: pd.Series, summary_df: pd.DataFrame) -> dict:
         status["manual"] = panel_status
 
         if pt is not None and not month_locs:
-            month_locs = legacy.get_month_locs(pt.columns)
+            month_locs = graph_core.get_month_locs(pt.columns)
 
     if should_build_panel(row, "edge"):
         panel_status, pt = build_edge_panel(
@@ -286,12 +286,12 @@ def build_one_site(site: str, row: pd.Series, summary_df: pd.DataFrame) -> dict:
         status["edge"] = panel_status
 
         if pt is not None and not month_locs:
-            month_locs = legacy.get_month_locs(pt.columns)
+            month_locs = graph_core.get_month_locs(pt.columns)
 
     if row["include_composite"]:
         if month_locs:
             if row["include_key"]:
-                legacy.draw_legend(
+                graph_core.draw_legend(
                     legacy.CMAP,
                     make_all_graphs=True,
                     save_files=True,
@@ -322,7 +322,7 @@ def build_figures(
 ) -> pd.DataFrame:
     """Main workflow used by the command-line runner."""
     configure_legacy_paths(data_dir=data_dir, output_dir=output_dir)
-    legacy.set_global_theme()
+    graph_core.set_global_theme()
 
     manifest_df = read_manifest(manifest_path)
     manifest_df = filter_manifest(
