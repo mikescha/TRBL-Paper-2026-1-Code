@@ -3,24 +3,44 @@ from __future__ import annotations
 import operator as op
 from pathlib import Path
 
-from internal import trbl_summarizer as legacy
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
-# Paths
+# Paths and related
 DATA_DIR = PROJECT_ROOT / "data"
-INPUT_CSV = legacy.INPUT_CSV
-PMJ_DIR = legacy.PMJ_DIR
-ALL_SHEET_HEADER_SIZE = legacy.ALL_SHEET_HEADER_SIZE
-FILENAME = legacy.FILENAME
+INPUT_CSV = DATA_DIR / "TRBL Analysis tracking - All.csv"
+PMJ_DIR = DATA_DIR / "pmj_data"
 FIGURE_DIR = PROJECT_ROOT / "figures"
-ERROR_FILE = PROJECT_ROOT / "error.txt"
+ERROR_FILE = PROJECT_ROOT / "outputs" / "grapher_errors.txt"
+HOURLY_PARQUET_FILES = DATA_DIR / "recordings_per_day_hour.parquet"
+SHARING_OUTPUT_DIR = PROJECT_ROOT / "outputs" / "sharing"
+#SHARING_OUTPUT_DIR = Path(r"G:\My Drive\TRBL for Wendy GDrive")
+ALL_SHEET_HEADER_SIZE = 2  # number of rows to skip over in the All file
 
 # Columns
-DATE_COL = legacy.DATE_COL
-HOUR = legacy.HOUR
-SITE = legacy.SITE
-SITE_COLS = legacy.site_columns
+DATE_COL = "date"
+SITE = "site"
+SITE_COLS = {
+    "id": "id",
+    "recording": "recording",
+    SITE: "site",
+    "day": "day",
+    "month": "month",
+    "year": "year",
+    "hour": "hour",
+    "minute": "minute",
+    "species": "species",
+    "songtype": "songtype",
+    "x1": "x1",
+    "x2": "x2",
+    "y1": "y1",
+    "y2": "y2",
+    "frequency": "frequency",
+    "validated": "validated",
+    "url": "url",
+    "score": "score",
+    "site_id": "site_id",
+}
+
 TAG_WSE = "tag_edge"
 TAG_WSM = "tag_wsm"
 TAG_MHE = "tag_mhe"
@@ -28,6 +48,7 @@ TAG_MHM = "tag_mhm"
 TAG_MHH = "tag_mhh"
 TAG_WS = "tag_ws"
 TAG_MH = "tag_mh"
+TAG_ = "tag_"
 TAG_P1N = "tag_p1n"
 TAG_P2N = "tag_p2n"
 TAG_P3N = "tag_p3n"
@@ -42,6 +63,8 @@ ALTSONG2 = "altsong2"
 COURT_SONG = "courtsong"
 SIMPLE_CALL2 = "simplecall2"
 
+FILENAME = "filename"
+HOUR = "hour"
 DATA_COL = {
     FILENAME: "filename",
     SITE: "site",
@@ -68,7 +91,7 @@ DATA_COL = {
     TAG_WSE: "tag<reviewed-WS-e>",
     TAG_WSM: "tag<reviewed-WS-m>",
     TAG_WS: "tag<reviewed-WS>",
-    "tag_": "tag<reviewed>",
+    TAG_: "tag<reviewed>",
     ALTSONG2: "val<Agelaius tricolor/Alternative Song 2>",
     ALTSONG1: "val<Agelaius tricolor/Alternative Song>",
     MALE_SONG: "val<Agelaius tricolor/Common Song>",
@@ -87,14 +110,30 @@ GRAPH_MINIMAN = "MiniMan"
 GRAPH_EDGE = "Edge Analysis"
 GRAPH_PM = "Pattern Matching Analysis"
 
-PM_FILE_TYPES = legacy.PM_FILE_TYPES
-SONG_COLS = legacy.SONG_COLS
-EDGE_COLS = legacy.EDGE_COLS
+PM_SONG_TYPES = [
+    "Male Song",
+    "Male Chorus",
+    "Female",
+    "Hatchling",
+    "Nestling",
+    "Fledgling",
+]
+PM_FILE_TYPES = PM_SONG_TYPES
+
+EDGE_N_TAGS = [
+    TAG_P1N,
+    TAG_P2N,
+    TAG_P3N,
+    TAG_P4N,
+]  # nestlings, p1 = pulse 1, p2 = pulse 2
+EDGE_YNC_TAGS = [TAG_YNC_P2, TAG_YNC_P3, TAG_YNC_P4]
+EDGE_TAGS = EDGE_N_TAGS + EDGE_YNC_TAGS
+EDGE_COLS = [DATA_COL[t] for t in EDGE_N_TAGS]
 
 MINI_MANUAL_TAGS = [TAG_MHH, TAG_MHM, TAG_WSM]
-MANUAL_TAGS = [TAG_MH, TAG_WS, TAG_WSE]
-
 MINI_MANUAL_COLS = [DATA_COL[t] for t in MINI_MANUAL_TAGS]
+
+MANUAL_TAGS = [TAG_MH, TAG_WS, TAG_]
 MANUAL_COLS = [DATA_COL[t] for t in MANUAL_TAGS]
 
 TAG_MAP = {  # map of tag_pXn to ync tag
@@ -103,23 +142,25 @@ TAG_MAP = {  # map of tag_pXn to ync tag
     DATA_COL[TAG_P3N]: DATA_COL[TAG_YNC_P3],
     DATA_COL[TAG_P4N]: DATA_COL[TAG_YNC_P4],
 }
+ALL_TAGS = MANUAL_TAGS + MINI_MANUAL_TAGS + EDGE_TAGS
 
-MALE_SONG = legacy.MALE_SONG
-ALTSONG1 = legacy.ALTSONG1
-ALTSONG2 = legacy.ALTSONG2
-ALL_SONGS = legacy.ALL_SONGS
-ALL_TAGS = legacy.ALL_TAGS
+MALE_SONG = "malesong"
+ALTSONG1 = "altsong1"
+ALTSONG2 = "altsong2"
+COURT_SONG = "courtsong"
+SIMPLE_CALL2 = "simplecall2"
+ALL_SONGS = [MALE_SONG, COURT_SONG, ALTSONG2, ALTSONG1, SIMPLE_CALL2]
 
+SONGS = [MALE_SONG, COURT_SONG, ALTSONG2, ALTSONG1]
+SONG_COLS = [DATA_COL[s] for s in SONGS]
 
-PHASE_MALE_CHORUS = legacy.PHASE_MALE_CHORUS
-PHASE_INC = legacy.PHASE_INC
-PHASE_BROOD = legacy.PHASE_BROOD
-PHASE_FLDG = legacy.PHASE_FLDG
+PHASE_MALE_CHORUS = "Settlement"
+PHASE_INC = "Incubation"
+PHASE_BROOD = "Brooding"
+PHASE_FLDG = "Fledgling"
 
-ABANDONED = legacy.ABANDONED
-
-VALIDATED_STR = legacy.VALIDATED_STR
-MISSING_DATA_FLAG = legacy.MISSING_DATA_FLAG
+ABANDONED = "abandon"
+VALIDATED_STR = "validated"
 
 MISSING_DATA_FLAG = -100
 PRESERVE_EDGES_FLAG = -99
@@ -176,8 +217,23 @@ ND_STRING = "ND"
 MISSED = "missed"
 
 # Color maps
-CMAP = legacy.CMAP
-CMAP_PM = legacy.CMAP_PM
+# default color map
+CMAP = {
+    DATA_COL[MALE_SONG]: "Greens",
+    DATA_COL[COURT_SONG]: "Oranges",
+    DATA_COL[ALTSONG2]: "Purples",
+    DATA_COL[ALTSONG1]: "Blues",
+    "Fledgling": "Blues",
+}
+
+CMAP_PM = {
+    "Male Song": "Greens",
+    "Male Chorus": "Oranges",
+    "Female": "Purples",
+    "Hatchling": "Blues",
+    "Nestling": "Blues",
+    "Fledgling": "Blues",
+}
 
 DPI = 300
 

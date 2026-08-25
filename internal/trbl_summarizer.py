@@ -20,10 +20,13 @@ from typing import Any, cast
 
 import matplotlib as mpl
 
-from .common import (
+from trbl_figures.constants import (
     DATA_DIR,
     INPUT_CSV,
     PMJ_DIR,
+)
+
+from .common import (
     load_pmj_subset_from_parquet,
 )
 

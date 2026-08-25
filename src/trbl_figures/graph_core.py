@@ -21,7 +21,6 @@ from matplotlib.patches import Rectangle
 from matplotlib.ticker import NullFormatter, NullLocator
 from matplotlib.transforms import Bbox
 
-from internal import trbl_summarizer as legacy
 from trbl_figures import constants as C
 from trbl_figures.composite import output_cmap
 from trbl_figures.date_utils import convert_to_datetime
@@ -550,15 +549,12 @@ def create_graph(
                 pass
             else:
                 if file_missing(site, graph_type, row):
-                    label = legacy.PM_OTHER_TYPES[row] if row in legacy.PM_OTHER_TYPES.keys() else row
+                    label = row
                     display_label = (
                         TAG_NAME_MAP[label] if label in TAG_NAME_MAP.keys() else label
                     )
                     x = (key_dates[C.SUMMARY_FIRST_REC] - df.columns[0]).days
                     add_text(axs[i], x, f"No data for {display_label}", "gray")
-        elif graph_type == C.GRAPH_PM and row in legacy.PM_OTHER_TYPES.keys():
-            x = (key_dates[C.SUMMARY_FIRST_REC] - df.columns[0]).days
-            add_text(ax, x, f"{legacy.PM_OTHER_TYPES[row]}", "black")
         elif graph_type == C.GRAPH_EDGE:
             pass
 
@@ -590,21 +586,6 @@ def create_graph(
                                 first_rec_date=key_dates[C.SUMMARY_FIRST_REC],
                                 last_rec_date=key_dates[C.SUMMARY_LAST_REC],
                             )
-
-            # TODO get rid of everything invovling insects for now
-            if row == legacy.PM_CHIRPER:
-                # Want to add a line above these two rows to separate them
-                # Get the top y-limit
-                top_y = ax.get_ylim()[1]
-                xmin = ax.get_xlim()[0]
-                xmax = ax.get_xlim()[1]
-
-                # Draw a horizontal line at the top of the axis
-                line = ax.hlines(
-                    y=top_y, xmin=xmin, xmax=xmax, colors="red", linewidth=0.5
-                )
-                dashes = (0, (18, 2))  # 10 points on, 5 points off
-                line.set_dashes(dashes)  # Apply the custom dash pattern
 
         # For edge: Add a rectangle around the regions of consective tags, and a line between
         # non-consectutive if it's a N tag.

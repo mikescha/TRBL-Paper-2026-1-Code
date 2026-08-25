@@ -4,7 +4,6 @@ from typing import Any
 
 import pandas as pd
 
-from internal import trbl_summarizer as legacy  # noqa: E402
 from trbl_figures import composite, data_io, graph_core, pivots
 from trbl_figures import constants as C
 from trbl_figures.manifest import filter_manifest, read_manifest
@@ -13,41 +12,18 @@ from trbl_figures.metadata import (
     get_publication_date_range,
     get_site_summary_dict,
 )
+from trbl_figures.pivots import get_recs_per_edge_day
 
 DEFAULT_INVENTORY_NAME = "figure_inventory.csv"
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
-def configure_legacy_paths(data_dir: Path, output_dir: Path) -> None:
-    """Point the legacy module at publication repo paths."""
-    data_dir = data_dir.resolve()
+def prepare_output_dirs(output_dir: Path) -> None:
+    """Create output directories needed by the publication figure workflow."""
     output_dir = output_dir.resolve()
 
     output_dir.mkdir(parents=True, exist_ok=True)
     (PROJECT_ROOT / "outputs").mkdir(parents=True, exist_ok=True)
-
-    # These names existed in the uploaded version. If your local version renamed one,
-    # the first run will tell us exactly where to patch.
-    legacy.make_all_graphs = True
-    legacy.align_dates = False
-
-    C.DATA_DIR = data_dir
-    C.INPUT_CSV = data_dir / "TRBL Analysis tracking - All.csv"
-    C.PMJ_DIR = data_dir / "pmj_data"
-
-    C.FIGURE_DIR = output_dir
-    C.ERROR_FILE = PROJECT_ROOT / "outputs" / "grapher_errors.txt"
-
-
-def save_component(site: str, graph_type: str, fig: Any) -> None:
-    """Save one graph component using the legacy save function."""
-    composite.save_figure(
-        site=site,
-        graph_type=graph_type,
-        graph=fig,
-        make_all_graphs=True,
-        do_aligned_dates=False,
-    )
 
 
 def should_build_panel(row: pd.Series, panel_name: str) -> bool:
@@ -84,7 +60,7 @@ def build_pattern_matching_panel(
         do_aligned_dates=False,
     )
 
-    save_component(site, C.GRAPH_PM, fig)
+    composite.save_figure(site, C.GRAPH_PM, fig)
 
     return "generated", pt_pm
 
@@ -119,7 +95,7 @@ def build_mini_manual_panel(
         missing_days=missing_days,
     )
 
-    save_component(site, C.GRAPH_MINIMAN, fig)
+    composite.save_figure(site, C.GRAPH_MINIMAN, fig)
 
     return "generated", pt_mini_manual
 
@@ -156,7 +132,7 @@ def build_manual_panel(
         denom_by_day=rec_norm,
     )
 
-    save_component(site, C.GRAPH_MANUAL, fig)
+    composite.save_figure(site, C.GRAPH_MANUAL, fig)
 
     return "generated", pt_manual
 
@@ -171,7 +147,7 @@ def build_edge_panel(
 ) -> tuple[str, Any | None]:
     """Build and save the Edge/hatchling panel if data exists."""
     pt_edge, have_edge_data = pivots.do_edge(df_core, date_range_dict, site)
-    edge_recs_per_day = legacy.get_recs_per_edge_day(df_core, date_range_dict)
+    edge_recs_per_day = get_recs_per_edge_day(df_core, date_range_dict)
 
     if not have_edge_data or pt_edge.empty:
         return "no_data", None
@@ -192,7 +168,7 @@ def build_edge_panel(
         denom_by_day=edge_recs_per_day,
     )
 
-    save_component(site, C.GRAPH_EDGE, fig)
+    composite.save_figure(site, C.GRAPH_EDGE, fig)
 
     return "generated", pt_edge
 
@@ -320,7 +296,7 @@ def build_figures(
     stop_on_error: bool = False,
 ) -> pd.DataFrame:
     """Main workflow used by the command-line runner."""
-    configure_legacy_paths(data_dir=data_dir, output_dir=output_dir)
+    prepare_output_dirs(output_dir=output_dir)
     graph_core.set_global_theme()
 
     manifest_df = read_manifest(manifest_path)

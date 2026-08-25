@@ -5,6 +5,8 @@ from typing import Any
 
 import pandas as pd
 
+from trbl_figures import constants as C
+
 COL_SITE_ID = "Site_ID"
 COL_SITE_NAME = "Site_Name"
 COL_DEPLOYMENT_START = "Deployment_Start"
@@ -32,17 +34,6 @@ OUTCOME_SUCCESSFUL = "Successful"
 OUTCOME_UNKNOWN = "Unknown"
 OUTCOME_NO_COLONY = "No Colony"
 OUTCOME_NO_TRBL = "No TRBL"
-
-# File locations
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-
-DATA_DIR = PROJECT_ROOT / "data"
-INPUT_CSV = DATA_DIR / "TRBL Analysis tracking - All.csv"
-PMJ_DIR = DATA_DIR / "pmj_data"
-
-HOURLY_PARQUET_FILES = DATA_DIR / "recordings_per_day_hour.parquet"
-SHARING_OUTPUT_DIR = PROJECT_ROOT / "outputs" / "sharing"
-#SHARING_OUTPUT_DIR = Path(r"G:\My Drive\TRBL for Wendy GDrive")
 
 
 def format_date_for_output(value: date | None, missing: str = STATUS_ND) -> str:
@@ -114,8 +105,8 @@ def save_csv_with_retry(df: pd.DataFrame, path: Path, share = False) -> None:
         except PermissionError:
             input(f"\n[!] Output file is locked in Excel: {path.name}\nClose it and press Enter to retry...")
 
-    if share and SHARING_OUTPUT_DIR.exists():
-        shutil.copy2(path, SHARING_OUTPUT_DIR / path.name)
+    if share and C.SHARING_OUTPUT_DIR.exists():
+        shutil.copy2(path, C.SHARING_OUTPUT_DIR / path.name)
 
 
 def load_pmj_subset_from_parquet(
@@ -124,7 +115,7 @@ def load_pmj_subset_from_parquet(
     columns: list[str],
 ) -> pd.DataFrame:
     """Load one site/call-type subset from the partitioned PMJ Parquet dataset."""
-    if not PMJ_DIR.exists():
+    if not C.PMJ_DIR.exists():
         return pd.DataFrame(columns=columns)
 
     # site and call_type are partition columns. They may be represented as
@@ -136,7 +127,7 @@ def load_pmj_subset_from_parquet(
     ]
 
     df = pd.read_parquet(
-        PMJ_DIR,
+        C.PMJ_DIR,
         columns=physical_columns,
         filters=[
             ("site", "==", site),

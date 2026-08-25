@@ -1,16 +1,10 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from pathlib import Path
 
 import pandas as pd
 
 from trbl_figures import constants as C
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_DATA_DIR = PROJECT_ROOT / "data"
-DEFAULT_INPUT_CSV = DEFAULT_DATA_DIR / "TRBL Analysis tracking - All.csv"
-DEFAULT_PMJ_DIR = DEFAULT_DATA_DIR / "PMJ Data"
 
 
 def empty_pm_data_frame() -> pd.DataFrame:

@@ -2,19 +2,10 @@ from __future__ import annotations
 
 import argparse
 import logging
-import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = PROJECT_ROOT / "src"
-
-
-# Temporary bridge only:
-# publication.py still imports internal.trbl_summarizer while legacy code
-# is being extracted. Remove this after publication.py no longer imports internal.
-project_root_text = str(PROJECT_ROOT)
-if project_root_text not in sys.path:
-    sys.path.insert(0, project_root_text)
 
 from trbl_figures.publication import build_figures  # noqa: E402
 

@@ -11,7 +11,6 @@ from matplotlib.figure import Figure
 from matplotlib.transforms import Bbox
 from PIL import Image, ImageDraw, ImageFont
 
-from internal import trbl_summarizer as legacy
 from trbl_figures import constants as C
 
 LEGEND_NAME = "legend.png"
@@ -94,7 +93,6 @@ def save_figure(
     graph_type: str,
     graph: Figure,
     delete_only=False,
-    make_all_graphs=False,
     do_aligned_dates=False,
 ):
 
@@ -125,13 +123,11 @@ def save_figure(
                 "November",
                 "December",
             }
-            #TODO remove everything to do with insects (PM_OTHER_TYPES)
             for ax in graph.axes:
                 for text in ax.texts[:]:
                     if (
                         text.get_text() in MONTH_NAMES
                         or "data" in text.get_text().lower()
-                        or text.get_text() in legacy.PM_OTHER_TYPES.values()
                     ):
                         text.remove()
             bbox_inches = None
@@ -143,8 +139,7 @@ def save_figure(
         if do_aligned_dates:
             trim_amount_in = -(1 / C.DPI)
         else:
-            #TODO drop everything with weather
-            trim_amount_in = 0.2 if graph_type == legacy.GRAPH_WEATHER else 0.1
+            trim_amount_in = 0.1
         bbox_inches = Bbox.from_bounds(
             0,  # x0 (left), -0.25 preserves the margin
             trim_amount_in,  # y0 (bottom trim in inches)

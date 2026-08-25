@@ -190,7 +190,7 @@ def get_site_summary_dict(site: str, summary_df: pd.DataFrame) -> dict:
 
 
 def build_key_dates(site_summary_dict: dict) -> dict:
-    """Build the key-date dictionary expected by legacy.create_graph."""
+    """Build the key-date dictionary expected by create_graph."""
     key_dates: dict[str, Any] = {}
 
     key_dates[C.SUMMARY_FIRST_REC] = site_summary_dict[C.SUMMARY_FIRST_REC]
@@ -247,9 +247,10 @@ def get_publication_date_range(
     """
     Return the publication graph date range.
 
-    Defaults to All.csv first/last recording dates to preserve legacy graphing behavior and avoid
+    Defaults to All.csv first/last recording dates to avoid
     field-note/manual recordings extending the plotted range.
     """
+
     all_csv_start = coerce_date_or_none(site_summary_dict[C.SUMMARY_FIRST_REC])
     all_csv_end = coerce_date_or_none(site_summary_dict[C.SUMMARY_LAST_REC])
 
