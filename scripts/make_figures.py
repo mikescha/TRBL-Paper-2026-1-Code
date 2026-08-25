@@ -1,21 +1,22 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
 from pathlib import Path
-
-from trbl_figures.publication import build_figures
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = PROJECT_ROOT / "src"
 
-# Make imports work whether the script is run from VS Code, PowerShell,
-# or later from a thin wrapper.
-for path in [PROJECT_ROOT, SRC_DIR]:
-    path_str = str(path)
-    if path_str not in sys.path:
-        sys.path.insert(0, path_str)
 
+# Temporary bridge only:
+# publication.py still imports internal.trbl_summarizer while legacy code
+# is being extracted. Remove this after publication.py no longer imports internal.
+project_root_text = str(PROJECT_ROOT)
+if project_root_text not in sys.path:
+    sys.path.insert(0, project_root_text)
+
+from trbl_figures.publication import build_figures  # noqa: E402
 
 DEFAULT_DATA_DIR = PROJECT_ROOT / "data"
 DEFAULT_MANIFEST = PROJECT_ROOT / "config" / "supplemental_figures.csv"
@@ -81,8 +82,13 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    args = parse_args()
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(levelname)s:%(name)s:%(message)s",
+    )
 
+    args = parse_args()
+    
     build_figures(
         manifest_path=args.manifest,
         data_dir=args.data_dir,

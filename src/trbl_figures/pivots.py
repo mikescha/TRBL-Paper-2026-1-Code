@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import logging
+
 import numpy as np
 import pandas as pd
 
 from trbl_figures import constants as C
 from trbl_figures.data_io import load_pm_data
 
+logger = logging.getLogger(__name__)
 
 def normalize_pt(pt: pd.DataFrame, date_range_dict: dict) -> pd.DataFrame:
     date_range = pd.date_range(date_range_dict[C.START], date_range_dict[C.END])
@@ -214,7 +217,7 @@ def do_pattern_matching(site: str, date_range_dict: dict) -> tuple[pd.DataFrame,
                 pt_pm = pd.concat([pt_pm, pt_for_file_type])
 
     else:
-        raise ValueError("{site}: All pattern matching data not available")
+        logger.warning("{site}: All pattern matching data not available")
 
     return pt_pm, not df_pattern_match.empty
 

@@ -6,6 +6,7 @@ import pandas as pd
 
 from internal import trbl_summarizer as legacy  # noqa: E402
 from trbl_figures import composite, data_io, graph_core, pivots
+from trbl_figures import constants as C
 from trbl_figures.manifest import filter_manifest, read_manifest
 from trbl_figures.metadata import (
     build_key_dates,
@@ -25,19 +26,17 @@ def configure_legacy_paths(data_dir: Path, output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     (PROJECT_ROOT / "outputs").mkdir(parents=True, exist_ok=True)
 
-    legacy.BEING_DEPLOYED_TO_STREAMLIT = False
-
     # These names existed in the uploaded version. If your local version renamed one,
     # the first run will tell us exactly where to patch.
     legacy.make_all_graphs = True
     legacy.align_dates = False
 
-    legacy.DATA_DIR = data_dir
-    legacy.INPUT_CSV = data_dir / "TRBL Analysis tracking - All.csv"
-    legacy.PMJ_DIR = data_dir / "pmj_data"
+    C.DATA_DIR = data_dir
+    C.INPUT_CSV = data_dir / "TRBL Analysis tracking - All.csv"
+    C.PMJ_DIR = data_dir / "pmj_data"
 
-    legacy.FIGURE_DIR = output_dir
-    legacy.ERROR_FILE = PROJECT_ROOT / "outputs" / "grapher_errors.txt"
+    C.FIGURE_DIR = output_dir
+    C.ERROR_FILE = PROJECT_ROOT / "outputs" / "grapher_errors.txt"
 
 
 def save_component(site: str, graph_type: str, fig: Any) -> None:
@@ -75,17 +74,17 @@ def build_pattern_matching_panel(
     fig = graph_core.create_graph(
         site=site,
         df=pt_pm,
-        row_names=legacy.PM_FILE_TYPES,
-        cmap=legacy.CMAP_PM,
-        title=legacy.GRAPH_PM,
-        graph_type=legacy.GRAPH_PM,
+        row_names=C.PM_FILE_TYPES,
+        cmap=C.CMAP_PM,
+        title=C.GRAPH_PM,
+        graph_type=C.GRAPH_PM,
         key_dates=key_dates,
         missing_days=missing_days,
         denom_by_day=rec_norm,
         do_aligned_dates=False,
     )
 
-    save_component(site, legacy.GRAPH_PM, fig)
+    save_component(site, C.GRAPH_PM, fig)
 
     return "generated", pt_pm
 
@@ -110,17 +109,17 @@ def build_mini_manual_panel(
     fig = graph_core.create_graph(
         site=site,
         df=pt_mini_manual,
-        row_names=legacy.SONG_COLS,
-        cmap=legacy.CMAP,
+        row_names=C.SONG_COLS,
+        cmap=C.CMAP,
         raw_data=df_site,
         draw_vert_rects=True,
         title="Manual Analysis (Periodic)",
-        graph_type=legacy.GRAPH_MINIMAN,
+        graph_type=C.GRAPH_MINIMAN,
         key_dates=key_dates,
         missing_days=missing_days,
     )
 
-    save_component(site, legacy.GRAPH_MINIMAN, fig)
+    save_component(site, C.GRAPH_MINIMAN, fig)
 
     return "generated", pt_mini_manual
 
@@ -140,24 +139,24 @@ def build_manual_panel(
         return "no_data", None
 
     manual_rows = [
-        legacy.data_col[legacy.MALE_SONG],
-        legacy.data_col[legacy.ALTSONG2],
-        legacy.data_col[legacy.ALTSONG1],
+        C.DATA_COL[C.MALE_SONG],
+        C.DATA_COL[C.ALTSONG2],
+        C.DATA_COL[C.ALTSONG1],
     ]
 
     fig = graph_core.create_graph(
         site=site,
         df=pt_manual,
         row_names=manual_rows,
-        cmap=legacy.CMAP,
+        cmap=C.CMAP,
         title="Manual Analysis (Daily Review)",
-        graph_type=legacy.GRAPH_MANUAL,
+        graph_type=C.GRAPH_MANUAL,
         key_dates=key_dates,
         missing_days=missing_days,
         denom_by_day=rec_norm,
     )
 
-    save_component(site, legacy.GRAPH_MANUAL, fig)
+    save_component(site, C.GRAPH_MANUAL, fig)
 
     return "generated", pt_manual
 
@@ -177,7 +176,7 @@ def build_edge_panel(
     if not have_edge_data or pt_edge.empty:
         return "no_data", None
 
-    cmap_edge = {name: "Blues" for name in legacy.EDGE_COLS}
+    cmap_edge = {name: "Blues" for name in C.EDGE_COLS}
 
     fig = graph_core.create_graph(
         site=site,
@@ -187,13 +186,13 @@ def build_edge_panel(
         raw_data=df_site,
         draw_horiz_rects=True,
         title="Manual Analysis (Hatchlings Only)",
-        graph_type=legacy.GRAPH_EDGE,
+        graph_type=C.GRAPH_EDGE,
         key_dates=key_dates,
         missing_days=missing_days,
         denom_by_day=edge_recs_per_day,
     )
 
-    save_component(site, legacy.GRAPH_EDGE, fig)
+    save_component(site, C.GRAPH_EDGE, fig)
 
     return "generated", pt_edge
 
@@ -217,9 +216,9 @@ def build_one_site(site: str, row: pd.Series, summary_df: pd.DataFrame) -> dict:
         status["error"] = "No source data found for site"
         return status
 
-    df_core = pivots.filter_to_core_hours(df_site, hour_col=legacy.HOUR)
+    df_core = pivots.filter_to_core_hours(df_site, hour_col=C.HOUR)
 
-    rec_norm = df_core.groupby(level=legacy.DATE_COL)["core_hour"].nunique()
+    rec_norm = df_core.groupby(level=C.DATE_COL)["core_hour"].nunique()
 
     site_summary_dict = get_site_summary_dict(site, summary_df)
 
@@ -292,7 +291,7 @@ def build_one_site(site: str, row: pd.Series, summary_df: pd.DataFrame) -> dict:
         if month_locs:
             if row["include_key"]:
                 graph_core.draw_legend(
-                    legacy.CMAP,
+                    C.CMAP,
                     make_all_graphs=True,
                     save_files=True,
                 )
@@ -350,7 +349,7 @@ def build_figures(
 
     results = []
 
-    for index, row in manifest_df.iterrows():
+    for _, row in manifest_df.iterrows():
         site = str(row["site_name"])
         print(f"\n[{len(results) + 1}/{len(manifest_df)}] Generating figures for {site}...")
 

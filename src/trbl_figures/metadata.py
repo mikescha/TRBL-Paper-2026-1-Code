@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import pandas as pd
@@ -11,6 +12,8 @@ from trbl_figures.date_utils import (
     is_valid_date_pair,
     is_valid_date_string,
 )
+
+logger = logging.getLogger(__name__)
 
 PULSE_PHASES = {
     C.PHASE_MALE_CHORUS: [C.PULSE_MC_START, C.PULSE_INC_START],  # -1
@@ -129,11 +132,10 @@ def process_site_summary_data(summary_row: pd.DataFrame) -> dict:
                 if value1.lower() not in [
                     "inf",
                     C.CONTINUOUS,
+                    C.MISSED,
                     C.ND_STRING.lower(),
                 ] and not is_valid_date_string(value1):
-                    raise ValueError(
-                        f"{error_prefix}: {target2} is a valid date, but {target1} is '{value1}' not ND, inf, continuous, or a valid date"
-                    )
+                    logger.warning(f"{target2} is a valid date, but {target1} is '{value1}' not ND, inf, continuous, or a valid date")
                 # It's a good date, so format it
                 if phase == C.PHASE_FLDG:
                     # For fledgling phase, don't subtract one from the end date
@@ -155,11 +157,9 @@ def process_site_summary_data(summary_row: pd.DataFrame) -> dict:
                 elif (
                     value2.lower() == "inf" and value1.lower() not in VALID_DESCRIPTORS
                 ):
-                    raise ValueError(
-                        f"{error_prefix}: In {target2} end date is 'inf' but start date is not 'inf'"
-                    )
+                    logger.warning(f"{error_prefix}: In {target2} end date is 'inf' but start date is not 'inf'")
             elif value2 == C.ND_STRING:
-                # TODO Are there any error cases here?
+                #TODO: This typically isn't an error case, need to figure out if there are any cases where it isn't 
                 pass
             else:
                 raise ValueError(

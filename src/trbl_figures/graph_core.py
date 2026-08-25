@@ -10,6 +10,8 @@ import pandas as pd
 
 # Force Matplotlib to use the standard, non-interactive Agg backend
 mpl.use("Agg")
+import logging
+
 import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
@@ -23,6 +25,10 @@ from internal import trbl_summarizer as legacy
 from trbl_figures import constants as C
 from trbl_figures.composite import output_cmap
 from trbl_figures.date_utils import convert_to_datetime
+
+logger = logging.getLogger(__name__)
+
+#TODO 2021 Markham Ravine_Composite has both manual and miniman in the new graph, but the old one just had miniman.
 
 # Figure width and height, values in inches
 FIG_W = 6.5
@@ -316,7 +322,7 @@ def add_event_date_marker(
     if event_date >= df.columns[0] and event_date <= df.columns[-1]:
         x = calc_x_from_date(df, event_date)
     else:
-        raise ValueError(
+        logger.warning(
             f"create_graph: {date_type} {event_date} is outside range of this year, which is {df.columns[0]} through {df.columns[-1]}"
         )
         return

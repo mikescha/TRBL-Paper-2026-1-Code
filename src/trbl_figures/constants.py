@@ -13,6 +13,8 @@ INPUT_CSV = legacy.INPUT_CSV
 PMJ_DIR = legacy.PMJ_DIR
 ALL_SHEET_HEADER_SIZE = legacy.ALL_SHEET_HEADER_SIZE
 FILENAME = legacy.FILENAME
+FIGURE_DIR = PROJECT_ROOT / "figures"
+ERROR_FILE = PROJECT_ROOT / "error.txt"
 
 # Columns
 DATE_COL = legacy.DATE_COL
@@ -171,7 +173,7 @@ SUMMARY_NUMERIC_COLS = ["Site ID", "Altitude", "Number of Recordings"]
 # Potential values in all.csv 
 CONTINUOUS = "continuous"
 ND_STRING = "ND"
-
+MISSED = "missed"
 
 # Color maps
 CMAP = legacy.CMAP
@@ -181,3 +183,5 @@ DPI = 300
 
 GRAPH_FONT = "Franklin Gothic Book"
 GRAPH_FONT_TTF = "FRABK.TTF"  # used for output to the file using PIL
+
+ALIGN_DATES = False
