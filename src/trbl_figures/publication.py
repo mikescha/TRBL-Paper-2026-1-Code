@@ -1,3 +1,4 @@
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 from time import perf_counter
 from typing import Any
@@ -214,6 +215,11 @@ def build_one_site(
 
     month_locs = {}
 
+    # Necessary for parallelization, so that each worker has its own working directory and doesn't conflict with other workers
+    site_id = str(manifest_row["site_id"])
+    site_work_dir = output_dir / "_work" / site_id
+    site_work_dir.mkdir(parents=True, exist_ok=True)
+
     if should_build_panel(manifest_row, "pattern_matching"):
         panel_status, pt = build_pattern_matching_panel(
             site=site,
@@ -222,7 +228,7 @@ def build_one_site(
             missing_days=missing_days,
             rec_norm=rec_norm,
             data_dir=data_dir,
-            output_dir=output_dir,
+            output_dir=site_work_dir,
         )
         status["pattern_matching"] = panel_status
 
@@ -236,7 +242,7 @@ def build_one_site(
             date_range_dict=date_range_dict,
             key_dates=key_dates,
             missing_days=missing_days,
-            output_dir=output_dir,
+            output_dir=site_work_dir,
         )
         status["mini_manual"] = panel_status
 
@@ -251,7 +257,7 @@ def build_one_site(
             key_dates=key_dates,
             missing_days=missing_days,
             rec_norm=rec_norm,
-            output_dir=output_dir,
+            output_dir=site_work_dir,
         )
         status["manual"] = panel_status
 
@@ -265,7 +271,7 @@ def build_one_site(
             date_range_dict=date_range_dict,
             key_dates=key_dates,
             missing_days=missing_days,
-            output_dir=output_dir,
+            output_dir=site_work_dir,
         )
         status["edge"] = panel_status
 
@@ -274,17 +280,11 @@ def build_one_site(
 
     if manifest_row["include_composite"]:
         if month_locs:
-            if manifest_row["include_key"]:
-                graph_core.draw_legend(
-                    C.CMAP,
-                    save_files=True,
-                    figure_dir=output_dir,
-                )
-
             composite.combine_unaligned_images(
                 site=site,
                 pretty_name=site_info_df["Pretty Site Name"].item(),
                 month_locs=month_locs,
+                component_dir=site_work_dir,
                 figure_dir=output_dir,
                 align_dates=False,
                 include_key=manifest_row["include_key"],
@@ -302,6 +302,44 @@ def build_one_site(
     return status
 
 
+def make_error_result(
+    site: str, manifest_row: pd.Series | dict, exc: Exception
+) -> dict:
+    """Return a standard inventory row for a failed site."""
+    return {
+        "site_id": manifest_row.get("site_id", ""),
+        "site_name": site,
+        "manual": "error",
+        "mini_manual": "error",
+        "edge": "error",
+        "pattern_matching": "error",
+        "composite": "error",
+        "error": repr(exc),
+    }
+
+
+def build_one_site_worker(job: dict) -> dict:
+    """Build one site from a worker-friendly job dictionary.
+
+    This must remain a top-level function so Windows multiprocessing can pickle it.
+    """
+    graph_core.set_global_theme()
+
+    manifest_row = pd.Series(job["manifest_row"])
+    site_info_df = pd.DataFrame.from_records(
+        job["site_info_records"],
+        columns=job["site_info_columns"],
+    )
+
+    return build_one_site(
+        site=job["site"],
+        manifest_row=manifest_row,
+        site_info_df=site_info_df,
+        data_dir=Path(job["data_dir"]),
+        output_dir=Path(job["output_dir"]),
+    )
+
+
 def build_figures(
     manifest_path: Path,
     data_dir: Path,
@@ -310,6 +348,7 @@ def build_figures(
     limit: int | None = None,
     dry_run: bool = False,
     stop_on_error: bool = False,
+    workers: int = 1,
 ) -> pd.DataFrame:
     """Main workflow used by the command-line runner."""
     prepare_output_dirs(output_dir=output_dir)
@@ -317,24 +356,11 @@ def build_figures(
 
     manifest_df = read_manifest(manifest_path)
 
-    # DEBUG
-    # TODO Consider removing for publication
-    # print(f"Manifest rows before filtering: {len(manifest_df)}")
-    # print(f"Manifest columns: {list(manifest_df.columns)}")
-    # print(f"only_sites: {only_sites!r}")
-    # print(f"limit: {limit!r}")
-
-    # if not manifest_df.empty:
-    #     print("First manifest rows:")
-    #     print(manifest_df[["site_id", "site_name"]].head().to_string(index=False))
-
     manifest_df = filter_manifest(
         manifest_df=manifest_df,
         only_sites=only_sites,
         limit=limit,
     )
-
-    # print(f"Manifest rows after filtering: {len(manifest_df)}")
 
     if manifest_df.empty:
         raise ValueError("No manifest rows remain after applying filters.")
@@ -351,45 +377,112 @@ def build_figures(
 
         return pd.DataFrame()
 
+    # Ensure we have a legend for the composite figure
+    graph_core.draw_legend(
+        C.CMAP,
+        save_files=True,
+        figure_dir=output_dir,
+    )
+
+    # Get the summary data for all sites, which is used to get the date range and key dates for each site
     summary_df = data_io.load_summary_data(data_dir=data_dir)
 
-    results = []
+    # Make the list of jobs to be processed, which will be passed to the worker pool
+    jobs: list[dict] = []
+    results_by_index: list[dict | None] = [None] * len(manifest_df)
 
-    for _, manifest_row in manifest_df.iterrows():
+    for job_index, (_, manifest_row) in enumerate(manifest_df.iterrows()):
         site = str(manifest_row["site_name"])
-        print(
-            f"\n[{len(results) + 1}/{len(manifest_df)}] Generating figures for {site}..."
-        )
 
         try:
-            site_df = metadata.get_site(site, summary_df)
-            result = build_one_site(
-                site=site,
-                manifest_row=manifest_row,
-                site_info_df=site_df,
-                data_dir=data_dir,
-                output_dir=output_dir,
-            )
+            site_info_df = metadata.get_site(site, summary_df)
 
         except Exception as exc:
             if stop_on_error:
                 raise
 
-            result = {
-                "site_id": manifest_row.get("site_id", ""),
-                "site_name": site,
-                "manual": "error",
-                "mini_manual": "error",
-                "edge": "error",
-                "pattern_matching": "error",
-                "composite": "error",
-                "error": repr(exc),
+            results_by_index[job_index] = make_error_result(
+                site=site,
+                manifest_row=manifest_row,
+                exc=exc,
+            )
+            print(f"  ERROR preparing {site}: {exc!r}")
+            continue
+
+        jobs.append(
+            {
+                "job_index": job_index,
+                "site": site,
+                "manifest_row": manifest_row.to_dict(),
+                "site_info_records": site_info_df.to_dict("records"),
+                "site_info_columns": list(site_info_df.columns),
+                "data_dir": str(data_dir.resolve()),
+                "output_dir": str(output_dir.resolve()),
+            }
+        )
+
+    if workers <= 1:
+        print(f"\nGenerating figures with {workers} worker processes...")
+
+        for completed_count, job in enumerate(jobs, start=1):
+            site = job["site"]
+            job_index = job["job_index"]
+
+            print(f"\n[{completed_count}/{len(jobs)}] Generating figures for {site}...")
+
+            try:
+                result = build_one_site_worker(job)
+
+            except Exception as exc:
+                if stop_on_error:
+                    raise
+
+                result = make_error_result(
+                    site=site,
+                    manifest_row=job["manifest_row"],
+                    exc=exc,
+                )
+
+                print(f"  ERROR: {exc!r}")
+
+            results_by_index[job_index] = result
+
+    else:
+        print(f"\nGenerating figures with {workers} worker processes...")
+
+        with ProcessPoolExecutor(max_workers=workers) as executor:
+            future_to_job = {
+                executor.submit(build_one_site_worker, job): job for job in jobs
             }
 
-            print(f"  ERROR: {exc!r}")
+            for completed_count, future in enumerate(
+                as_completed(future_to_job),
+                start=1,
+            ):
+                job = future_to_job[future]
+                site = job["site"]
+                job_index = job["job_index"]
 
-        results.append(result)
+                try:
+                    result = future.result()
+                    print(f"[{completed_count}/{len(jobs)}] Finished {site}")
 
+                except Exception as exc:
+                    if stop_on_error:
+                        raise
+
+                    result = make_error_result(
+                        site=site,
+                        manifest_row=job["manifest_row"],
+                        exc=exc,
+                    )
+
+                    print(f"[{completed_count}/{len(jobs)}] ERROR {site}: {exc!r}")
+
+                results_by_index[job_index] = result
+
+    # Process the results and write the inventory CSV
+    results = [result for result in results_by_index if result is not None]
     inventory_df = pd.DataFrame(results)
 
     output_dir.mkdir(parents=True, exist_ok=True)

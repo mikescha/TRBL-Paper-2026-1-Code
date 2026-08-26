@@ -264,6 +264,7 @@ def combine_unaligned_images(
     site: str,
     pretty_name: str,
     month_locs: dict,
+    component_dir: Path,
     figure_dir: Path,
     align_dates: bool = False,
     include_key: bool = False,
@@ -282,7 +283,7 @@ def combine_unaligned_images(
 
     # Get all the files that match
     pattern = f"{site}_*clean.png"
-    matching_files = glob.glob(str(figure_dir / pattern))
+    matching_files = glob.glob(str(component_dir / pattern))
 
     if align_dates:
         matching_files = [f for f in matching_files if "aligned" in f]

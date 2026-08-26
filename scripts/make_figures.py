@@ -45,8 +45,7 @@ def parse_args() -> argparse.Namespace:
         action="append",
         default=None,
         help=(
-            "Limit run to a site_id or exact site_name. "
-            "Can be supplied multiple times."
+            "Limit run to a site_id or exact site_name. Can be supplied multiple times."
         ),
     )
 
@@ -69,6 +68,13 @@ def parse_args() -> argparse.Namespace:
         help="Stop immediately on first error instead of writing an error row to the inventory.",
     )
 
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help="Number of parallel worker processes to use. Default is 1.",
+    )
+
     return parser.parse_args()
 
 
@@ -79,7 +85,7 @@ def main() -> None:
     )
 
     args = parse_args()
-    
+
     build_figures(
         manifest_path=args.manifest,
         data_dir=args.data_dir,
@@ -88,6 +94,7 @@ def main() -> None:
         limit=args.limit,
         dry_run=args.dry_run,
         stop_on_error=args.stop_on_error,
+        workers=args.workers,
     )
 
 
