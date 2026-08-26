@@ -38,8 +38,8 @@ def output_cmap(figure_dir: Path) -> None:
 
 
 # Helper to ensure we make the filename consistently because this is done from multiple places
-def make_img_filename(site: str, graph_type: str, extra="") -> str:
-    filename = f"{site}_{graph_type}_{extra}.png"
+def make_img_filename(site: str, graph_type: str) -> str:
+    filename = f"{site}_{graph_type}.png"
     return filename
 
 
@@ -64,53 +64,22 @@ def save_figure(
     graph: Figure,
     figure_dir: Path,
     delete_only: bool = False,
-    do_aligned_dates: bool = False,
 ):
 
-    aligned_str = "aligned" if do_aligned_dates else ""
-    filename = make_img_filename(site, graph_type, extra=aligned_str)
+    filename = make_img_filename(site, graph_type)
     figure_path = figure_dir / filename
     # We aren't saving the "unclean" one any more, so technically this isn't necessary but doesn't hurt
     remove_file(figure_path)
 
-    extra = aligned_str if do_aligned_dates else "clean"
-    cleaned_image_filename = make_img_filename(site, graph_type, extra=extra)
+    cleaned_image_filename = make_img_filename(site, graph_type)
     cleaned_figure_path = figure_dir / cleaned_image_filename
     remove_file(cleaned_figure_path)
     if not delete_only:
-        # If we're making the graph where everything is aligned, we don't want the dates
-        if do_aligned_dates:
-            MONTH_NAMES = {
-                "January",
-                "February",
-                "March",
-                "April",
-                "May",
-                "June",
-                "July",
-                "August",
-                "September",
-                "October",
-                "November",
-                "December",
-            }
-            for ax in graph.axes:
-                for text in ax.texts[:]:
-                    if (
-                        text.get_text() in MONTH_NAMES
-                        or "data" in text.get_text().lower()
-                    ):
-                        text.remove()
-            bbox_inches = None
-
-        # Now, need to trim off the bottom of the image that we don't need any more
+        # Need to trim off the bottom of the image that we don't need any more
         fig_w, fig_h = graph.get_size_inches()
         fig_w += 1 / C.DPI  # Round up to prevent clipping on the right
         # Crop from the bottom
-        if do_aligned_dates:
-            trim_amount_in = -(1 / C.DPI)
-        else:
-            trim_amount_in = 0.1
+        trim_amount_in = 0.1
         bbox_inches = Bbox.from_bounds(
             0,  # x0 (left), -0.25 preserves the margin
             trim_amount_in,  # y0 (bottom trim in inches)
@@ -126,7 +95,7 @@ def save_figure(
     plt.close(graph)
 
 
-def concat_images(*images: Image.Image, is_legend: bool = False) -> Image.Image:
+def concat_images(*images: Image.Image) -> Image.Image:
     """Generate composite of all supplied images."""
     # Get the widest width. This will be a graph, not the legend
     width = max(image.width for image in images)
@@ -231,64 +200,28 @@ def apply_decorations_to_composite(
     return final
 
 
-# Code from ChatGPT to draw the labels without clipping
-def wrap_text(
-    draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont, max_width: int
-) -> list[str]:
-    """
-    Word-wrap `text` into lines that fit within `max_width` pixels.
-    Preserves existing newlines as paragraph breaks.
-    """
-    lines: list[str] = []
-    for para in text.splitlines() or [""]:
-        words = para.split()
-        if not words:
-            lines.append("")  # blank line
-            continue
-
-        cur = words[0]
-        for w in words[1:]:
-            trial = f"{cur} {w}"
-            if draw.textlength(trial, font=font) <= max_width:
-                cur = trial
-            else:
-                lines.append(cur)
-                cur = w
-        lines.append(cur)
-    return lines
-
-
 # Load all the images that match the site name, combine them into a single composite,
 # and then save that out
-def combine_unaligned_images(
+def combine_images(
     site: str,
     pretty_name: str,
     month_locs: dict,
     component_dir: Path,
     figure_dir: Path,
-    align_dates: bool = False,
     include_key: bool = False,
 ):
     # if there are no months, then we didn't have any data to graph so don't make a composite
     if len(month_locs) == 0:
         return
 
-    if align_dates:
-        composite_filename = make_img_filename(site, "Aligned_Composite")
-    else:
-        composite_filename = make_img_filename(site, "Composite")
-
+    composite_filename = make_img_filename(site, "Composite")
     composite_path = figure_dir / composite_filename
     remove_file(composite_path)
 
     # Get all the files that match
-    pattern = f"{site}_*clean.png"
-    matching_files = glob.glob(str(component_dir / pattern))
-
-    if align_dates:
-        matching_files = [f for f in matching_files if "aligned" in f]
-    else:
-        matching_files = [f for f in matching_files if "aligned" not in f]
+    pattern = f"{site}*.png"
+    matching_files_search = glob.glob(str(component_dir / pattern))
+    matching_files = [f for f in matching_files_search]
 
     site_fig_dict = {}
     for graph_type in GRAPH_TYPES:

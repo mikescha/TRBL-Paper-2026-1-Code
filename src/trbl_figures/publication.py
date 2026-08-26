@@ -55,11 +55,9 @@ def build_pattern_matching_panel(
         key_dates=key_dates,
         missing_days=missing_days,
         denom_by_day=rec_norm,
-        do_aligned_dates=False,
     )
 
     composite.save_figure(site, C.GRAPH_PM, fig, figure_dir=output_dir)
-
     return "generated", pt_pm
 
 
@@ -280,13 +278,12 @@ def build_one_site(
 
     if manifest_row["include_composite"]:
         if month_locs:
-            composite.combine_unaligned_images(
+            composite.combine_images(
                 site=site,
                 pretty_name=site_info_df["Pretty Site Name"].item(),
                 month_locs=month_locs,
                 component_dir=site_work_dir,
                 figure_dir=output_dir,
-                align_dates=False,
                 include_key=manifest_row["include_key"],
             )
 

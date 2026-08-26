@@ -29,6 +29,7 @@ from trbl_figures.date_utils import convert_to_datetime
 
 logger = logging.getLogger(__name__)
 
+
 # TODO 2021 Markham Ravine_Composite has both manual and miniman in the new graph, but the old one just had miniman.
 
 # Figure width and height, values in inches
@@ -45,11 +46,9 @@ HATCH_PATTERN = "////////"
 HATCH_BG_COLOR = "mintcream"
 HATCH_DARK_COLOR = "silver"
 BORDER_WIDTH = 0.25  # for the vertical month dividers and the exterior edges
-TEMP_LINES = 0.5  # for the red lines on the weather graph
 LABEL_OFFSET = 0.125  # gap between bottom of the graph and the months
 EDGE_GRAPH_BORDER_WIDTH = 0.5
 EDGE_GRAPH_BORDER_INSET = 0.02
-EDGE_GRAPH_COLOR_SCALE = 0.6  # Bigger is darker
 
 CMAP_NAMES = {
     C.DATA_COL[C.MALE_SONG]: "Male Song",
@@ -146,7 +145,6 @@ def draw_axis_labels(
     y: float = 0,
     bottom: float = 0,
     top: float = 0,
-    do_aligned_dates: bool = False,
 ):
 
     def approx_text_width_px(text: str, fontsize_pt: float) -> float:
@@ -200,7 +198,7 @@ def draw_axis_labels(
     total = len(months)
 
     for i, (month, n_days) in enumerate(months):
-        if not skip_month_names and not do_aligned_dates:
+        if not skip_month_names:
             draw_month_label_if_fits(
                 ax,
                 month,
@@ -388,7 +386,6 @@ def create_graph(
     draw_horiz_rects: bool = False,
     title="",
     graph_type="",
-    do_aligned_dates: bool = False,
 ) -> Figure:
     plt.close()  # close any prior graph that was open
 
@@ -415,25 +412,18 @@ def create_graph(
     graph_drawn = []
 
     # --- inches-based spec ---
-    if not do_aligned_dates:
-        top_pad_in = 0.0  # Whitespace at the top
-        title_band_in = 0.2  # Gap for the label
-        top_band_in = top_pad_in + title_band_in
+    top_pad_in = 0.0  # Whitespace at the top
+    title_band_in = 0.2  # Gap for the label
+    top_band_in = top_pad_in + title_band_in
 
-        # Height in inches of the actual graph, allot 0.2" per row
-        row_height = 0.2
+    # Height in inches of the actual graph, allot 0.2" per row
+    row_height = 0.2
 
-        label_height_in = 0.25  # Axis labels
-        legend_height_in = 0.0
-        bottom_pad_in = 0.0  # Whitespace at the bottom
-        bottom_band_in = label_height_in + legend_height_in + bottom_pad_in
-        fig_w = FIG_W  # keep your width in inches
-    else:
-        top_pad_in = 0
-        top_band_in = 0  # nothing goes at the top
-        row_height = 0.05  # half height or so
-        bottom_band_in = 0  # no labels or legend
-        fig_w = 5.5  # inches
+    label_height_in = 0.25  # Axis labels
+    legend_height_in = 0.0
+    bottom_pad_in = 0.0  # Whitespace at the bottom
+    bottom_band_in = label_height_in + legend_height_in + bottom_pad_in
+    fig_w = FIG_W  # keep your width in inches
 
     plot_in = row_count * row_height
     fig_h = top_band_in + plot_in + bottom_band_in
@@ -475,7 +465,7 @@ def create_graph(
     fig.subplots_adjust(left=0, right=1, bottom=bottom, top=top)
 
     # If we have one, add the title for the graph and set appropriate formatting
-    if len(title) and not do_aligned_dates:
+    if len(title):
         title_y = 1.0 - (top_pad_in / fig_h)
         plot_title(fig, title, y=title_y)
 
@@ -567,7 +557,7 @@ def create_graph(
 
         # Track which graphs we drew, so we can put the proper ticks on later
         graph_drawn.append(i)
-        if graph_type == C.GRAPH_PM and not do_aligned_dates:
+        if graph_type == C.GRAPH_PM:
             # Add the event markers if available
             for pulse, pulse_dates in key_dates.items():
                 if pulse in C.PULSES:  # Do this to skip the start/end recording dates
@@ -688,7 +678,6 @@ def create_graph(
         y=text_y,
         bottom=bottom,
         top=top,
-        do_aligned_dates=do_aligned_dates,
     )
 
     # Draw a bounding rectangle around everything except the caption

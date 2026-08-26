@@ -117,7 +117,6 @@ def process_site_summary_data(summary_row: pd.DataFrame) -> dict:
                         raise ValueError(
                             f"{error_prefix}: Found 'continuous' in {pulse} without it in the prior pulse"
                         )
-                        check_for_continuous = False  # reset the flag for the next phase, as continuous should only be valid for one phase per pulse
             elif value1 == C.ND_STRING:
                 # this is OK, we aren't going to draw anything in this case
                 pass
@@ -179,16 +178,6 @@ def process_site_summary_data(summary_row: pd.DataFrame) -> dict:
     summary_dict[C.PULSE_COUNT] = p_count
 
     return summary_dict
-
-
-def get_site_summary_dict(site: str, summary_df: pd.DataFrame) -> dict:
-    """Return the processed All.csv summary dictionary for one site."""
-    summary_row = summary_df[summary_df.iloc[:, 1] == site]
-
-    if summary_row.empty:
-        raise ValueError(f"Site {site!r} was not found in All.csv.")
-
-    return process_site_summary_data(summary_row)
 
 
 def get_site(site: str, all_df: pd.DataFrame) -> pd.DataFrame:

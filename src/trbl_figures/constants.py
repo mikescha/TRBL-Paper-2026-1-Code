@@ -8,13 +8,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 # Paths and related
 DATA_DIR = PROJECT_ROOT / "data"
 INPUT_CSV_NAME = "TRBL Analysis tracking - All.csv"
-INPUT_CSV = DATA_DIR / INPUT_CSV_NAME
 PMJ_DIR_NAME = "pmj_data"
 PMJ_DIR = DATA_DIR / PMJ_DIR_NAME
 FIGURE_DIR = PROJECT_ROOT / "figures"
-HOURLY_PARQUET_FILES = DATA_DIR / "recordings_per_day_hour.parquet"
-SHARING_OUTPUT_DIR = PROJECT_ROOT / "outputs" / "sharing"
-# SHARING_OUTPUT_DIR = Path(r"G:\My Drive\TRBL for Wendy GDrive")
 ALL_SHEET_HEADER_SIZE = 2  # number of rows to skip over in the All file
 
 # Columns
@@ -179,15 +175,6 @@ _OPS = {
 # Core hours, these are the only ones we check for presences
 CORE_START_HOUR = 7
 CORE_END_HOUR_EXCLUSIVE = 20  # includes 7 through 19, excludes 20
-MIN_CORE_HOURS_FOR_MEANINGFUL_ABSENCE = 4  # Fewer than this and we can't say much about an absence, so we won't count it as an absence in the effort-aware logic
-MAX_CONSECUTIVE_BRIDGE_DAYS = 2
-EFFORT_THRESHOLD_RATIOS = {
-    "male_chorus": (3, 13),
-    "female_chatter": (2, 13),
-    "hbc": (1, 2),
-    "nbc": (3, 13),
-    "fbc": (3, 13),
-}
 
 # Columns in all.csv
 PULSE_COUNT = "pulse_count"
@@ -195,22 +182,12 @@ ABANDONED = "abandon"
 PULSES = ["p1", "p2", "p3", "p4"]
 SUMMARY_FIRST_REC = "First Recording"
 SUMMARY_LAST_REC = "Last Recording"
-SUMMARY_EDGE_DATES = [SUMMARY_FIRST_REC, SUMMARY_LAST_REC]
 PULSE_MC_START = "mcstart"
 PULSE_MC_END = "mcend"
 PULSE_INC_START = "incstart"
 PULSE_HATCH = "hatch"
 PULSE_FIRST_FLDG = "fledgestart"
 PULSE_LAST_FLDG = "fledgedisp"
-PULSE_DATE_TYPES = [
-    PULSE_MC_START,
-    PULSE_MC_END,
-    PULSE_INC_START,
-    PULSE_HATCH,
-    PULSE_FIRST_FLDG,
-    PULSE_LAST_FLDG,
-    ABANDONED,
-]
 SUMMARY_NUMERIC_COLS = ["Site ID", "Altitude", "Number of Recordings"]
 
 # Potential values in all.csv
@@ -238,8 +215,5 @@ CMAP_PM = {
 }
 
 DPI = 300
-
 GRAPH_FONT = "Franklin Gothic Book"
 GRAPH_FONT_TTF = "FRABK.TTF"  # used for output to the file using PIL
-
-ALIGN_DATES = False
