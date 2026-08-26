@@ -34,18 +34,17 @@ def count_valid_pulses(pulse_data: dict) -> int:
     for p in C.PULSES:
         result = False
         for phase in pulse_data[p]:
-            if (
-                phase in PULSE_PHASES.keys()
+            if phase in PULSE_PHASES and is_valid_date_pair(
+                pulse_data[p][phase]
             ):  # Need to skip Abandoned, as it doesn't have a pair of dates
-                if is_valid_date_pair(pulse_data[p][phase]):
-                    result = True
-                    break
+                result = True
+                break
         count += 1 if result else 0
 
     return count
 
 
-#TODO How much of this error checking is still needed?
+# TODO How much of this error checking is still needed?
 def process_site_summary_data(summary_row: pd.DataFrame) -> dict:
     first_rec = get_val_from_df(summary_row, C.SUMMARY_FIRST_REC)
     last_rec = get_val_from_df(summary_row, C.SUMMARY_LAST_REC)
@@ -68,7 +67,7 @@ def process_site_summary_data(summary_row: pd.DataFrame) -> dict:
 
     for pulse in C.PULSES:
         pulse_result = {}
-        error_prefix = f"process_site: {str(summary_row.iloc[0]['Name'])} at {pulse}"
+        error_prefix = f"process_site: {summary_row.iloc[0]['Name']!s} at {pulse}"
 
         # Make our list of abandoned dates for later graphing purposes
         abandoned_date = convert_to_datetime(
@@ -78,9 +77,7 @@ def process_site_summary_data(summary_row: pd.DataFrame) -> dict:
             pulse_result[C.ABANDONED] = abandoned_date
 
         check_for_continuous = False  # flag to track if we see "continuous" in either date for this pulse, so we can check for errors
-        for phase in PULSE_PHASES:
-            start, end = PULSE_PHASES[phase]
-
+        for phase, (start, end) in PULSE_PHASES.items():
             target1 = f"{pulse}{start}"
             value1 = get_val_from_df(summary_row, target1)
             result1 = pd.NaT
@@ -126,7 +123,9 @@ def process_site_summary_data(summary_row: pd.DataFrame) -> dict:
                 pass
             else:
                 # if not one of the above, then it's an error
-                raise ValueError(f"{error_prefix}: Found invalid data in {target1}: {value1}")
+                raise ValueError(
+                    f"{error_prefix}: Found invalid data in {target1}: {value1}"
+                )
 
             if is_valid_date_string(value2):
                 if value1.lower() not in [
@@ -135,7 +134,9 @@ def process_site_summary_data(summary_row: pd.DataFrame) -> dict:
                     C.MISSED,
                     C.ND_STRING.lower(),
                 ] and not is_valid_date_string(value1):
-                    logger.warning(f"{target2} is a valid date, but {target1} is '{value1}' not ND, inf, continuous, or a valid date")
+                    logger.warning(
+                        f"{target2} is a valid date, but {target1} is '{value1}' not ND, inf, continuous, or a valid date"
+                    )
                 # It's a good date, so format it
                 if phase == C.PHASE_FLDG:
                     # For fledgling phase, don't subtract one from the end date
@@ -157,9 +158,11 @@ def process_site_summary_data(summary_row: pd.DataFrame) -> dict:
                 elif (
                     value2.lower() == "inf" and value1.lower() not in VALID_DESCRIPTORS
                 ):
-                    logger.warning(f"{error_prefix}: In {target2} end date is 'inf' but start date is not 'inf'")
+                    logger.warning(
+                        f"{error_prefix}: In {target2} end date is 'inf' but start date is not 'inf'"
+                    )
             elif value2 == C.ND_STRING:
-                #TODO: This typically isn't an error case, need to figure out if there are any cases where it isn't 
+                # TODO: This typically isn't an error case, need to figure out if there are any cases where it isn't
                 pass
             else:
                 raise ValueError(
@@ -176,7 +179,6 @@ def process_site_summary_data(summary_row: pd.DataFrame) -> dict:
     summary_dict[C.PULSE_COUNT] = p_count
 
     return summary_dict
-
 
 
 def get_site_summary_dict(site: str, summary_df: pd.DataFrame) -> dict:
@@ -229,7 +231,6 @@ def build_key_dates(site_summary_dict: dict) -> dict:
     return key_dates
 
 
-
 def coerce_date_or_none(value: Any) -> pd.Timestamp | None:
     """Convert a date-like value to a normalized Timestamp, or None."""
     if value is None or pd.isna(value) or str(value).strip() == "":
@@ -270,4 +271,3 @@ def get_publication_date_range(
         "start": start.date(),
         "end": end.date(),
     }
-

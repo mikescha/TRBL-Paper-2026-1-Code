@@ -1,0 +1,493 @@
+diff --git a/scripts/make_figures.py b/scripts/make_figures.py
+index fcd8903..745e22c 100644
+--- a/scripts/make_figures.py
++++ b/scripts/make_figures.py
+@@ -7,7 +7,7 @@ from pathlib import Path
+ PROJECT_ROOT = Path(__file__).resolve().parents[1]
+ SRC_DIR = PROJECT_ROOT / "src"
+ 
+-from trbl_figures.publication import build_figures  # noqa: E402
++from trbl_figures.publication import build_figures
+ 
+ DEFAULT_DATA_DIR = PROJECT_ROOT / "data"
+ DEFAULT_MANIFEST = PROJECT_ROOT / "config" / "supplemental_figures.csv"
+diff --git a/src/trbl_figures/date_utils.py b/src/trbl_figures/date_utils.py
+index 511cd86..055024b 100644
+--- a/src/trbl_figures/date_utils.py
++++ b/src/trbl_figures/date_utils.py
+@@ -1,4 +1,3 @@
+-
+ from __future__ import annotations
+ 
+ import pandas as pd
+@@ -20,10 +19,7 @@ def is_valid_date_string(date_string):
+         potential_date = potential_date.lstrip("~").rstrip("*").strip()
+ 
+     result = pd.to_datetime(potential_date, format=DATE_FORMAT, errors="coerce")
+-    if pd.isna(result):
+-        return False
+-    else:
+-        return True
++    return not pd.isna(result)
+ 
+ 
+ def is_valid_date_pair(phase_data: dict) -> bool:
+diff --git a/src/trbl_figures/graph_core.py b/src/trbl_figures/graph_core.py
+index fae4016..b5b9a10 100644
+--- a/src/trbl_figures/graph_core.py
++++ b/src/trbl_figures/graph_core.py
+@@ -2,6 +2,7 @@ from __future__ import annotations
+ 
+ import os
+ from collections import Counter
++from itertools import pairwise
+ from typing import Any, cast
+ 
+ import matplotlib as mpl
+@@ -27,7 +28,7 @@ from trbl_figures.date_utils import convert_to_datetime
+ 
+ logger = logging.getLogger(__name__)
+ 
+-#TODO 2021 Markham Ravine_Composite has both manual and miniman in the new graph, but the old one just had miniman.
++# TODO 2021 Markham Ravine_Composite has both manual and miniman in the new graph, but the old one just had miniman.
+ 
+ # Figure width and height, values in inches
+ FIG_W = 6.5
+@@ -56,7 +57,7 @@ CMAP_NAMES = {
+     C.DATA_COL[C.ALTSONG1]: "Hatchling/Nestling/Fledgling",
+ }
+ 
+-#TODO what's up with the TBD
++# TODO what's up with the TBD
+ TAG_NAME_MAP = {
+     "val<Agelaius tricolor/Common Song>": "Male Song",
+     "val<Agelaius tricolor/Courtship Song>": "Male Chorus",
+@@ -67,6 +68,7 @@ TAG_NAME_MAP = {
+     "Agelaius tricolor/Simple Call 2": "Fledgling Begging Call",
+ }
+ 
++
+ # Helper in case we want to do extra processing here
+ def plot_title(fig: Figure, title: str, x: float = 0.0, y: float = 1.0):
+     fig.suptitle(
+@@ -79,6 +81,7 @@ def plot_title(fig: Figure, title: str, x: float = 0.0, y: float = 1.0):
+         verticalalignment="top",
+     )
+ 
++
+ def overlay_missing_days_hatch(
+     axs,
+     missing_days: pd.DatetimeIndex,
+@@ -92,7 +95,7 @@ def overlay_missing_days_hatch(
+ ):
+     if missing_days.empty:
+         return
+-    
++
+     for ax in axs:
+         for missing_day in missing_days:
+             if start_day <= missing_day <= last_day:
+@@ -224,7 +227,7 @@ def draw_axis_labels(
+ def calc_x_from_date(df, event_date) -> float:
+     loc = df.columns.get_loc(event_date)
+     if not isinstance(loc, int):
+-        raise ValueError(f"Expected unique column for {event_date}, got {type(loc)}")
++        raise TypeError(f"Expected unique column for {event_date}, got {type(loc)}")
+     x = float(loc)
+     return x
+ 
+@@ -297,12 +300,15 @@ def draw_event_date_marker(
+             xycoords="data",
+             xytext=(ARROW_LEN_PT, 0),
+             textcoords="offset points",
+-            arrowprops=dict(arrowstyle="->", lw=0.5, color="black", mutation_scale=7),
++            arrowprops={
++                "arrowstyle": "->",
++                "lw": 0.5,
++                "color": "black",
++                "mutation_scale": 7,
++            },
+             zorder=18,
+             annotation_clip=False,
+         )
+-        
+-    return
+ 
+ 
+ def add_event_date_marker(
+@@ -330,7 +336,6 @@ def add_event_date_marker(
+     )
+ 
+ 
+-
+ def get_days_per_month(date_list: list) -> dict:
+     # Make a list of all the values, but only use the month name. Then, count how many of each
+     # month names there are to get the number of days/month
+@@ -376,15 +381,12 @@ def create_graph(
+     df: pd.DataFrame,
+     row_names: list,
+     cmap: dict,
+-    raw_data=pd.DataFrame(),
+-    draw_vert_rects: bool = False,
++    key_dates: dict,
++    missing_days: pd.DatetimeIndex,
++    denom_by_day: pd.Series,
+     draw_horiz_rects: bool = False,
+     title="",
+     graph_type="",
+-    draw_connectors: bool = False,
+-    key_dates={},
+-    missing_days: pd.DatetimeIndex = pd.DatetimeIndex([]),
+-    denom_by_day: pd.Series = pd.Series(),
+     do_aligned_dates: bool = False,
+ ) -> Figure:
+     plt.close()  # close any prior graph that was open
+@@ -392,10 +394,13 @@ def create_graph(
+     # data cleanup -- for scenarios where the incubation date was calculated, we could have an actual number
+     # although the number is earlier than the date of the first recording. To ensure this gets graphed correctly,
+     # we need to update the date
+-    if key_dates:
+-        if "p1" in key_dates.keys() and C.PULSE_INC_START in key_dates["p1"].keys():
+-            if key_dates["p1"][C.PULSE_INC_START] < key_dates[C.SUMMARY_FIRST_REC]:
+-                key_dates["p1"][C.PULSE_INC_START] = convert_to_datetime("6/1/1967")
++    if (
++        key_dates != None
++        and "p1" in key_dates
++        and C.PULSE_INC_START in key_dates["p1"]
++        and key_dates["p1"][C.PULSE_INC_START] < key_dates[C.SUMMARY_FIRST_REC]
++    ):
++        key_dates["p1"][C.PULSE_INC_START] = convert_to_datetime("6/1/1967")
+ 
+     if len(df) == 0:
+         # return an empty plot if nothing to graph
+@@ -500,7 +505,9 @@ def create_graph(
+ 
+         cmap_final.set_under("white")
+         no_data_color = "white" if graph_type == C.GRAPH_PM else NO_DATA_COLOR
+-        cmap_final.set_bad(no_data_color)  # representing the days where analysis was not done
++        cmap_final.set_bad(
++            no_data_color
++        )  # representing the days where analysis was not done
+ 
+         # Normalize all the data by the number of recordings that were used per day
+         if graph_type == C.GRAPH_MINIMAN:
+@@ -520,7 +527,7 @@ def create_graph(
+         norm = colors.PowerNorm(gamma=gamma, vmin=vmin, vmax=vmax)
+ 
+         arr = np.ma.masked_invalid(df_norm.to_numpy(dtype=float))
+-        n_rows, n_cols = arr.shape
++        _, n_cols = arr.shape
+ 
+         ax = axs[i]
+         ax.imshow(
+@@ -550,9 +557,8 @@ def create_graph(
+             else:
+                 if file_missing(site, graph_type, row):
+                     label = row
+-                    display_label = (
+-                        TAG_NAME_MAP[label] if label in TAG_NAME_MAP.keys() else label
+-                    )
++                    display_label = TAG_NAME_MAP.get(label, label)
++
+                     x = (key_dates[C.SUMMARY_FIRST_REC] - df.columns[0]).days
+                     add_text(axs[i], x, f"No data for {display_label}", "gray")
+         elif graph_type == C.GRAPH_EDGE:
+@@ -562,9 +568,9 @@ def create_graph(
+         graph_drawn.append(i)
+         if graph_type == C.GRAPH_PM and not do_aligned_dates:
+             # Add the event markers if available
+-            for pulse in key_dates:
++            for pulse, pulse_dates in key_dates.items():
+                 if pulse in C.PULSES:  # Do this to skip the start/end recording dates
+-                    for date_type, event_date in key_dates[pulse].items():
++                    for date_type, event_date in pulse_dates.items():
+                         if (
+                             row == "Male Chorus"
+                             and date_type == C.PULSE_MC_START
+@@ -634,7 +640,7 @@ def create_graph(
+                 # For each pair of rects, draw a line between them.
+                 gaps = [
+                     (end1 + 1, start2 - 1)
+-                    for (start1, end1), (start2, end2) in zip(borders, borders[1:])
++                    for (_, end1), (start2, _) in pairwise(borders)
+                 ]
+                 for start_gap, end_gap in gaps:
+                     left = start_gap
+@@ -852,7 +858,7 @@ def draw_legend(cmap: dict, make_all_graphs: bool, save_files: bool):
+     ]
+ 
+     ncols = len(legend_items)
+-    fig, axs = plt.subplots(
++    _, axs = plt.subplots(
+         nrows=1,
+         ncols=ncols,
+         figsize=(FIG_W * 0.8, FIG_H * 0.15),
+@@ -891,5 +897,3 @@ def draw_legend(cmap: dict, make_all_graphs: bool, save_files: bool):
+ 
+     if save_files:
+         output_cmap()
+-
+-    return
+diff --git a/src/trbl_figures/metadata.py b/src/trbl_figures/metadata.py
+index fcf4efb..533146e 100644
+--- a/src/trbl_figures/metadata.py
++++ b/src/trbl_figures/metadata.py
+@@ -34,18 +34,17 @@ def count_valid_pulses(pulse_data: dict) -> int:
+     for p in C.PULSES:
+         result = False
+         for phase in pulse_data[p]:
+-            if (
+-                phase in PULSE_PHASES.keys()
++            if phase in PULSE_PHASES and is_valid_date_pair(
++                pulse_data[p][phase]
+             ):  # Need to skip Abandoned, as it doesn't have a pair of dates
+-                if is_valid_date_pair(pulse_data[p][phase]):
+-                    result = True
+-                    break
++                result = True
++                break
+         count += 1 if result else 0
+ 
+     return count
+ 
+ 
+-#TODO How much of this error checking is still needed?
++# TODO How much of this error checking is still needed?
+ def process_site_summary_data(summary_row: pd.DataFrame) -> dict:
+     first_rec = get_val_from_df(summary_row, C.SUMMARY_FIRST_REC)
+     last_rec = get_val_from_df(summary_row, C.SUMMARY_LAST_REC)
+@@ -68,7 +67,7 @@ def process_site_summary_data(summary_row: pd.DataFrame) -> dict:
+ 
+     for pulse in C.PULSES:
+         pulse_result = {}
+-        error_prefix = f"process_site: {str(summary_row.iloc[0]['Name'])} at {pulse}"
++        error_prefix = f"process_site: {summary_row.iloc[0]['Name']!s} at {pulse}"
+ 
+         # Make our list of abandoned dates for later graphing purposes
+         abandoned_date = convert_to_datetime(
+@@ -78,9 +77,7 @@ def process_site_summary_data(summary_row: pd.DataFrame) -> dict:
+             pulse_result[C.ABANDONED] = abandoned_date
+ 
+         check_for_continuous = False  # flag to track if we see "continuous" in either date for this pulse, so we can check for errors
+-        for phase in PULSE_PHASES:
+-            start, end = PULSE_PHASES[phase]
+-
++        for phase, (start, end) in PULSE_PHASES.items():
+             target1 = f"{pulse}{start}"
+             value1 = get_val_from_df(summary_row, target1)
+             result1 = pd.NaT
+@@ -126,7 +123,9 @@ def process_site_summary_data(summary_row: pd.DataFrame) -> dict:
+                 pass
+             else:
+                 # if not one of the above, then it's an error
+-                raise ValueError(f"{error_prefix}: Found invalid data in {target1}: {value1}")
++                raise ValueError(
++                    f"{error_prefix}: Found invalid data in {target1}: {value1}"
++                )
+ 
+             if is_valid_date_string(value2):
+                 if value1.lower() not in [
+@@ -135,7 +134,9 @@ def process_site_summary_data(summary_row: pd.DataFrame) -> dict:
+                     C.MISSED,
+                     C.ND_STRING.lower(),
+                 ] and not is_valid_date_string(value1):
+-                    logger.warning(f"{target2} is a valid date, but {target1} is '{value1}' not ND, inf, continuous, or a valid date")
++                    logger.warning(
++                        f"{target2} is a valid date, but {target1} is '{value1}' not ND, inf, continuous, or a valid date"
++                    )
+                 # It's a good date, so format it
+                 if phase == C.PHASE_FLDG:
+                     # For fledgling phase, don't subtract one from the end date
+@@ -157,9 +158,11 @@ def process_site_summary_data(summary_row: pd.DataFrame) -> dict:
+                 elif (
+                     value2.lower() == "inf" and value1.lower() not in VALID_DESCRIPTORS
+                 ):
+-                    logger.warning(f"{error_prefix}: In {target2} end date is 'inf' but start date is not 'inf'")
++                    logger.warning(
++                        f"{error_prefix}: In {target2} end date is 'inf' but start date is not 'inf'"
++                    )
+             elif value2 == C.ND_STRING:
+-                #TODO: This typically isn't an error case, need to figure out if there are any cases where it isn't 
++                # TODO: This typically isn't an error case, need to figure out if there are any cases where it isn't
+                 pass
+             else:
+                 raise ValueError(
+@@ -178,7 +181,6 @@ def process_site_summary_data(summary_row: pd.DataFrame) -> dict:
+     return summary_dict
+ 
+ 
+-
+ def get_site_summary_dict(site: str, summary_df: pd.DataFrame) -> dict:
+     """Return the processed All.csv summary dictionary for one site."""
+     summary_row = summary_df[summary_df.iloc[:, 1] == site]
+@@ -229,7 +231,6 @@ def build_key_dates(site_summary_dict: dict) -> dict:
+     return key_dates
+ 
+ 
+-
+ def coerce_date_or_none(value: Any) -> pd.Timestamp | None:
+     """Convert a date-like value to a normalized Timestamp, or None."""
+     if value is None or pd.isna(value) or str(value).strip() == "":
+@@ -270,4 +271,3 @@ def get_publication_date_range(
+         "start": start.date(),
+         "end": end.date(),
+     }
+-
+diff --git a/src/trbl_figures/pivots.py b/src/trbl_figures/pivots.py
+index f09d50b..67a4eba 100644
+--- a/src/trbl_figures/pivots.py
++++ b/src/trbl_figures/pivots.py
+@@ -10,6 +10,7 @@ from trbl_figures.data_io import load_pm_data
+ 
+ logger = logging.getLogger(__name__)
+ 
++
+ def normalize_pt(pt: pd.DataFrame, date_range_dict: dict) -> pd.DataFrame:
+     date_range = pd.date_range(date_range_dict[C.START], date_range_dict[C.END])
+     temp = pt.reindex(date_range)  # .fillna(0)
+@@ -36,7 +37,7 @@ def filter_df_by_tags(
+         val_token = filter_str[len(op_token) :]
+         threshold = float(val_token)
+         cmp = C._OPS[op_token]
+-    
++
+         target_mask = cmp(df[target_tags], threshold).any(axis=1)
+ 
+         if exclude_tags:
+@@ -46,7 +47,6 @@ def filter_df_by_tags(
+         return df.loc[target_mask]
+ 
+ 
+-
+ def make_pivot_table(
+     df, date_range_dict, preserve_edges=False, labels=None, label_dict=None
+ ):
+@@ -143,7 +143,6 @@ def get_pmj_detection_hours(df: pd.DataFrame) -> pd.Series:
+     return df_detection_hours
+ 
+ 
+-
+ # Take all the PMJ data for a type of call and generate a pivot table that has the count of "detection hours" for each day during
+ # "core hours" of 7a up to 8p. A detection hour is an hour in which there was a validated recording of the call, and we only
+ # count one per hour to avoid biasing the data by long recording sessions.
+@@ -167,7 +166,8 @@ def make_pattern_match_pt(
+ 
+ 
+ def filter_to_core_hours(
+-    df: pd.DataFrame, hour_col: str = "hour",
++    df: pd.DataFrame,
++    hour_col: str = "hour",
+     core_start: int = C.CORE_START_HOUR,
+     core_end_exclusive: int = C.CORE_END_HOUR_EXCLUSIVE,
+ ) -> pd.DataFrame:
+@@ -182,7 +182,7 @@ def filter_to_core_hours(
+ 
+ 
+ def get_missing_days(df_site: pd.DataFrame, date_range_dict: dict) -> pd.DatetimeIndex:
+-    # returns the set of days between start and end that don't have any recordings, 
++    # returns the set of days between start and end that don't have any recordings,
+     # i.e. are missing from the dataset
+     df_temp = df_site.copy()
+     df_temp.index = pd.to_datetime(df_temp.index)
+@@ -196,7 +196,6 @@ def get_missing_days(df_site: pd.DataFrame, date_range_dict: dict) -> pd.Datetim
+ 
+ def do_pattern_matching(site: str, date_range_dict: dict) -> tuple[pd.DataFrame, bool]:
+     # Load all the PM files, any errors will return an empty table. For later graphing purposes,
+-    global align_dates
+ 
+     df_pattern_match = load_pm_data(site)
+ 
+@@ -228,7 +227,9 @@ def do_mini_manual(df_site: pd.DataFrame, date_range_dict: dict):
+     # 2. Make a pivot table as above
+     #
+     df_mini_manual = filter_df_by_tags(df_site, C.MINI_MANUAL_COLS)
+-    pt_mini_manual = make_pivot_table(df_mini_manual, date_range_dict, labels=C.SONG_COLS)
++    pt_mini_manual = make_pivot_table(
++        df_mini_manual, date_range_dict, labels=C.SONG_COLS
++    )
+     return pt_mini_manual, not df_mini_manual.empty
+ 
+ 
+@@ -247,7 +248,7 @@ def do_manual(df_site: pd.DataFrame, date_range_dict: dict):
+     return pt_manual, not df_manual.empty
+ 
+ 
+-#TODO fix this so it doesn't modify the original dataframe but returns a new one
++# TODO fix this so it doesn't modify the original dataframe but returns a new one
+ def fix_bad_values(df: pd.DataFrame):
+     """
+     This function finds columns containing "---", prints a warning message,
+@@ -259,7 +260,7 @@ def fix_bad_values(df: pd.DataFrame):
+             df[col] = df[col].replace(-100, 0)
+ 
+ 
+-#TODO is there any error checking we can do on the tags? If so, put it here
++# TODO is there any error checking we can do on the tags? If so, put it here
+ def check_edge_cols_for_errors(df: pd.DataFrame, tag_map: dict) -> bool:
+     error_found = False
+     # Look for -100s
+@@ -293,7 +294,6 @@ def do_edge(df_site: pd.DataFrame, date_range_dict: dict, site: str):
+     return pt_edge, have_edge_data
+ 
+ 
+-
+ def get_recs_per_edge_day(df_site: pd.DataFrame, date_range_dict: dict) -> pd.Series:
+     # Get the number of recordings per day for the edge data, this is used for normalizing the data by the number of recordings made
+     df_edge_recs = filter_df_by_tags(df_site, list(C.TAG_MAP.keys()))
+diff --git a/src/trbl_figures/publication.py b/src/trbl_figures/publication.py
+index 90477d2..2091081 100644
+--- a/src/trbl_figures/publication.py
++++ b/src/trbl_figures/publication.py
+@@ -1,4 +1,3 @@
+-
+ from pathlib import Path
+ from typing import Any
+ 
+@@ -40,8 +39,7 @@ def build_pattern_matching_panel(
+ ) -> tuple[str, Any | None]:
+     """Build and save the pattern-matching panel if data exists."""
+     pt_pm, have_pm_data = pivots.do_pattern_matching(
+-        site=site,
+-        date_range_dict=date_range_dict
++        site=site, date_range_dict=date_range_dict
+     )
+ 
+     if not have_pm_data or pt_pm.empty:
+@@ -87,12 +85,11 @@ def build_mini_manual_panel(
+         df=pt_mini_manual,
+         row_names=C.SONG_COLS,
+         cmap=C.CMAP,
+-        raw_data=df_site,
+-        draw_vert_rects=True,
+         title="Manual Analysis (Periodic)",
+         graph_type=C.GRAPH_MINIMAN,
+         key_dates=key_dates,
+         missing_days=missing_days,
++        denom_by_day=pd.Series(),
+     )
+ 
+     composite.save_figure(site, C.GRAPH_MINIMAN, fig)
+@@ -159,7 +156,6 @@ def build_edge_panel(
+         df=pt_edge,
+         row_names=pt_edge.index.to_list(),
+         cmap=cmap_edge,
+-        raw_data=df_site,
+         draw_horiz_rects=True,
+         title="Manual Analysis (Hatchlings Only)",
+         graph_type=C.GRAPH_EDGE,
+@@ -327,7 +323,9 @@ def build_figures(
+ 
+     for _, row in manifest_df.iterrows():
+         site = str(row["site_name"])
+-        print(f"\n[{len(results) + 1}/{len(manifest_df)}] Generating figures for {site}...")
++        print(
++            f"\n[{len(results) + 1}/{len(manifest_df)}] Generating figures for {site}..."
++        )
+ 
+         try:
+             result = build_one_site(site=site, row=row, summary_df=summary_df)
+@@ -360,4 +358,3 @@ def build_figures(
+     print(f"\nWrote inventory: {inventory_path}")
+ 
+     return inventory_df
+-

@@ -1,4 +1,3 @@
-
 from pathlib import Path
 from typing import Any
 
@@ -12,10 +11,9 @@ from trbl_figures.metadata import (
     get_publication_date_range,
     get_site_summary_dict,
 )
-from trbl_figures.pivots import get_recs_per_edge_day
 
 DEFAULT_INVENTORY_NAME = "figure_inventory.csv"
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 def prepare_output_dirs(output_dir: Path) -> None:
@@ -37,11 +35,14 @@ def build_pattern_matching_panel(
     key_dates: dict,
     missing_days: pd.DatetimeIndex,
     rec_norm: pd.Series,
+    data_dir: Path,
+    output_dir: Path,
 ) -> tuple[str, Any | None]:
     """Build and save the pattern-matching panel if data exists."""
     pt_pm, have_pm_data = pivots.do_pattern_matching(
         site=site,
-        date_range_dict=date_range_dict
+        date_range_dict=date_range_dict,
+        data_dir=data_dir,
     )
 
     if not have_pm_data or pt_pm.empty:
@@ -60,7 +61,7 @@ def build_pattern_matching_panel(
         do_aligned_dates=False,
     )
 
-    composite.save_figure(site, C.GRAPH_PM, fig)
+    composite.save_figure(site, C.GRAPH_PM, fig, figure_dir=output_dir)
 
     return "generated", pt_pm
 
@@ -68,10 +69,10 @@ def build_pattern_matching_panel(
 def build_mini_manual_panel(
     site: str,
     df_core: pd.DataFrame,
-    df_site: pd.DataFrame,
     date_range_dict: dict,
     key_dates: dict,
     missing_days: pd.DatetimeIndex,
+    output_dir: Path,
 ) -> tuple[str, Any | None]:
     """Build and save the mini-manual panel if data exists."""
     pt_mini_manual, have_mini_manual_data = pivots.do_mini_manual(
@@ -87,15 +88,14 @@ def build_mini_manual_panel(
         df=pt_mini_manual,
         row_names=C.SONG_COLS,
         cmap=C.CMAP,
-        raw_data=df_site,
-        draw_vert_rects=True,
         title="Manual Analysis (Periodic)",
         graph_type=C.GRAPH_MINIMAN,
         key_dates=key_dates,
         missing_days=missing_days,
+        denom_by_day=pd.Series(),
     )
 
-    composite.save_figure(site, C.GRAPH_MINIMAN, fig)
+    composite.save_figure(site, C.GRAPH_MINIMAN, fig, figure_dir=output_dir)
 
     return "generated", pt_mini_manual
 
@@ -107,6 +107,7 @@ def build_manual_panel(
     key_dates: dict,
     missing_days: pd.DatetimeIndex,
     rec_norm: pd.Series,
+    output_dir: Path,
 ) -> tuple[str, Any | None]:
     """Build and save the manual daily-review panel if data exists."""
     pt_manual, have_manual_data = pivots.do_manual(df_core, date_range_dict)
@@ -132,7 +133,7 @@ def build_manual_panel(
         denom_by_day=rec_norm,
     )
 
-    composite.save_figure(site, C.GRAPH_MANUAL, fig)
+    composite.save_figure(site, C.GRAPH_MANUAL, fig, figure_dir=output_dir)
 
     return "generated", pt_manual
 
@@ -140,14 +141,14 @@ def build_manual_panel(
 def build_edge_panel(
     site: str,
     df_core: pd.DataFrame,
-    df_site: pd.DataFrame,
     date_range_dict: dict,
     key_dates: dict,
     missing_days: pd.DatetimeIndex,
+    output_dir: Path,
 ) -> tuple[str, Any | None]:
     """Build and save the Edge/hatchling panel if data exists."""
     pt_edge, have_edge_data = pivots.do_edge(df_core, date_range_dict, site)
-    edge_recs_per_day = get_recs_per_edge_day(df_core, date_range_dict)
+    edge_recs_per_day = pivots.get_recs_per_edge_day(df_core, date_range_dict)
 
     if not have_edge_data or pt_edge.empty:
         return "no_data", None
@@ -159,7 +160,6 @@ def build_edge_panel(
         df=pt_edge,
         row_names=pt_edge.index.to_list(),
         cmap=cmap_edge,
-        raw_data=df_site,
         draw_horiz_rects=True,
         title="Manual Analysis (Hatchlings Only)",
         graph_type=C.GRAPH_EDGE,
@@ -168,12 +168,18 @@ def build_edge_panel(
         denom_by_day=edge_recs_per_day,
     )
 
-    composite.save_figure(site, C.GRAPH_EDGE, fig)
+    composite.save_figure(site, C.GRAPH_EDGE, fig, figure_dir=output_dir)
 
     return "generated", pt_edge
 
 
-def build_one_site(site: str, row: pd.Series, summary_df: pd.DataFrame) -> dict:
+def build_one_site(
+    site: str,
+    row: pd.Series,
+    summary_df: pd.DataFrame,
+    data_dir: Path,
+    output_dir: Path,
+) -> dict:
     """Generate requested figure panels and composite for one site."""
     status = {
         "site_id": row.get("site_id", ""),
@@ -186,7 +192,7 @@ def build_one_site(site: str, row: pd.Series, summary_df: pd.DataFrame) -> dict:
         "error": "",
     }
 
-    df_site = data_io.load_site_data(site)
+    df_site = data_io.load_site_data(site, data_dir=data_dir)
 
     if df_site.empty:
         status["error"] = "No source data found for site"
@@ -215,6 +221,8 @@ def build_one_site(site: str, row: pd.Series, summary_df: pd.DataFrame) -> dict:
             key_dates=key_dates,
             missing_days=missing_days,
             rec_norm=rec_norm,
+            data_dir=data_dir,
+            output_dir=output_dir,
         )
         status["pattern_matching"] = panel_status
 
@@ -225,10 +233,10 @@ def build_one_site(site: str, row: pd.Series, summary_df: pd.DataFrame) -> dict:
         panel_status, pt = build_mini_manual_panel(
             site=site,
             df_core=df_core,
-            df_site=df_site,
             date_range_dict=date_range_dict,
             key_dates=key_dates,
             missing_days=missing_days,
+            output_dir=output_dir,
         )
         status["mini_manual"] = panel_status
 
@@ -243,6 +251,7 @@ def build_one_site(site: str, row: pd.Series, summary_df: pd.DataFrame) -> dict:
             key_dates=key_dates,
             missing_days=missing_days,
             rec_norm=rec_norm,
+            output_dir=output_dir,
         )
         status["manual"] = panel_status
 
@@ -253,10 +262,10 @@ def build_one_site(site: str, row: pd.Series, summary_df: pd.DataFrame) -> dict:
         panel_status, pt = build_edge_panel(
             site=site,
             df_core=df_core,
-            df_site=df_site,
             date_range_dict=date_range_dict,
             key_dates=key_dates,
             missing_days=missing_days,
+            output_dir=output_dir,
         )
         status["edge"] = panel_status
 
@@ -268,15 +277,16 @@ def build_one_site(site: str, row: pd.Series, summary_df: pd.DataFrame) -> dict:
             if row["include_key"]:
                 graph_core.draw_legend(
                     C.CMAP,
-                    make_all_graphs=True,
                     save_files=True,
+                    figure_dir=output_dir,
                 )
 
             composite.combine_unaligned_images(
                 site=site,
                 month_locs=month_locs,
-                include_weather=False,
+                figure_dir=output_dir,
                 align_dates=False,
+                include_key=row["include_key"],
             )
 
             status["composite"] = "generated"
@@ -300,11 +310,25 @@ def build_figures(
     graph_core.set_global_theme()
 
     manifest_df = read_manifest(manifest_path)
+
+    # DEBUG
+    # TODO Consider removing for publication
+    # print(f"Manifest rows before filtering: {len(manifest_df)}")
+    # print(f"Manifest columns: {list(manifest_df.columns)}")
+    # print(f"only_sites: {only_sites!r}")
+    # print(f"limit: {limit!r}")
+
+    # if not manifest_df.empty:
+    #     print("First manifest rows:")
+    #     print(manifest_df[["site_id", "site_name"]].head().to_string(index=False))
+
     manifest_df = filter_manifest(
         manifest_df=manifest_df,
         only_sites=only_sites,
         limit=limit,
     )
+
+    # print(f"Manifest rows after filtering: {len(manifest_df)}")
 
     if manifest_df.empty:
         raise ValueError("No manifest rows remain after applying filters.")
@@ -321,16 +345,24 @@ def build_figures(
 
         return pd.DataFrame()
 
-    summary_df = data_io.load_summary_data()
+    summary_df = data_io.load_summary_data(data_dir=data_dir)
 
     results = []
 
     for _, row in manifest_df.iterrows():
         site = str(row["site_name"])
-        print(f"\n[{len(results) + 1}/{len(manifest_df)}] Generating figures for {site}...")
+        print(
+            f"\n[{len(results) + 1}/{len(manifest_df)}] Generating figures for {site}..."
+        )
 
         try:
-            result = build_one_site(site=site, row=row, summary_df=summary_df)
+            result = build_one_site(
+                site=site,
+                row=row,
+                summary_df=summary_df,
+                data_dir=data_dir,
+                output_dir=output_dir,
+            )
 
         except Exception as exc:
             if stop_on_error:
@@ -360,4 +392,3 @@ def build_figures(
     print(f"\nWrote inventory: {inventory_path}")
 
     return inventory_df
-

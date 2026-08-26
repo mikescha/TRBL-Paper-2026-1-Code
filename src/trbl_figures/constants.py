@@ -7,13 +7,15 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 # Paths and related
 DATA_DIR = PROJECT_ROOT / "data"
-INPUT_CSV = DATA_DIR / "TRBL Analysis tracking - All.csv"
-PMJ_DIR = DATA_DIR / "pmj_data"
+INPUT_CSV_NAME = "TRBL Analysis tracking - All.csv"
+INPUT_CSV = DATA_DIR / INPUT_CSV_NAME
+PMJ_DIR_NAME = "pmj_data"
+PMJ_DIR = DATA_DIR / PMJ_DIR_NAME
 FIGURE_DIR = PROJECT_ROOT / "figures"
 ERROR_FILE = PROJECT_ROOT / "outputs" / "grapher_errors.txt"
 HOURLY_PARQUET_FILES = DATA_DIR / "recordings_per_day_hour.parquet"
 SHARING_OUTPUT_DIR = PROJECT_ROOT / "outputs" / "sharing"
-#SHARING_OUTPUT_DIR = Path(r"G:\My Drive\TRBL for Wendy GDrive")
+# SHARING_OUTPUT_DIR = Path(r"G:\My Drive\TRBL for Wendy GDrive")
 ALL_SHEET_HEADER_SIZE = 2  # number of rows to skip over in the All file
 
 # Columns
@@ -211,7 +213,7 @@ PULSE_DATE_TYPES = [
 ]
 SUMMARY_NUMERIC_COLS = ["Site ID", "Altitude", "Number of Recordings"]
 
-# Potential values in all.csv 
+# Potential values in all.csv
 CONTINUOUS = "continuous"
 ND_STRING = "ND"
 MISSED = "missed"

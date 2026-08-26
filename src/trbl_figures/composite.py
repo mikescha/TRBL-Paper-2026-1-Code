@@ -33,9 +33,9 @@ GRAPH_TYPES = [
 ]
 
 
-def output_cmap():
+def output_cmap(figure_dir: Path = FIGURE_DIR) -> None:
     # Save the legend if one doesn't exist; if I update the code, need to delete the file to regenerate it
-    figure_path = FIGURE_DIR / LEGEND_NAME
+    figure_path = figure_dir / LEGEND_NAME
     if not os.path.exists(figure_path):
         plt.savefig(figure_path, dpi="figure", bbox_inches="tight", pad_inches=0)
 
@@ -60,7 +60,7 @@ def remove_file(full_path: Path) -> bool:
     return result
 
 
-#TODO This needs optimizing
+# TODO This needs optimizing
 @lru_cache
 def load_all_file():
     return pd.read_csv(C.INPUT_CSV, skiprows=C.ALL_SHEET_HEADER_SIZE)
@@ -80,11 +80,11 @@ def get_site_info(site_name: str, site_info_fields: list) -> dict:
 
     return site_info
 
+
 def get_pretty_name_for_site(site: str) -> str:
     name_column = "Pretty Site Name"
     name_dict = get_site_info(site, [name_column])
     return name_dict[name_column]
-
 
 
 # Save the graphic to a different folder. All file-related options are managed from here.
@@ -92,19 +92,20 @@ def save_figure(
     site: str,
     graph_type: str,
     graph: Figure,
-    delete_only=False,
-    do_aligned_dates=False,
+    figure_dir: Path,
+    delete_only: bool = False,
+    do_aligned_dates: bool = False,
 ):
 
     aligned_str = "aligned" if do_aligned_dates else ""
     filename = make_img_filename(site, graph_type, extra=aligned_str)
-    figure_path = FIGURE_DIR / filename
+    figure_path = figure_dir / filename
     # We aren't saving the "unclean" one any more, so technically this isn't necessary but doesn't hurt
     remove_file(figure_path)
 
     extra = aligned_str if do_aligned_dates else "clean"
     cleaned_image_filename = make_img_filename(site, graph_type, extra=extra)
-    cleaned_figure_path = FIGURE_DIR / cleaned_image_filename
+    cleaned_figure_path = figure_dir / cleaned_image_filename
     remove_file(cleaned_figure_path)
     if not delete_only:
         # If we're making the graph where everything is aligned, we don't want the dates
@@ -288,10 +289,15 @@ def wrap_text(
         lines.append(cur)
     return lines
 
+
 # Load all the images that match the site name, combine them into a single composite,
 # and then save that out
 def combine_unaligned_images(
-    site: str, month_locs: dict, include_weather: bool, align_dates: bool = False
+    site: str,
+    month_locs: dict,
+    figure_dir: Path,
+    align_dates: bool = False,
+    include_key: bool = False,
 ):
     # if there are no months, then we didn't have any data to graph so don't make a composite
     if len(month_locs) == 0:
@@ -302,12 +308,12 @@ def combine_unaligned_images(
     else:
         composite_filename = make_img_filename(site, "Composite")
 
-    composite_path = FIGURE_DIR / composite_filename
+    composite_path = figure_dir / composite_filename
     remove_file(composite_path)
 
     # Get all the files that match
     pattern = f"{site}_*clean.png"
-    matching_files = glob.glob(os.path.join(FIGURE_DIR, pattern))
+    matching_files = glob.glob(str(figure_dir / pattern))
 
     if align_dates:
         matching_files = [f for f in matching_files if "aligned" in f]
@@ -320,23 +326,21 @@ def combine_unaligned_images(
         assert len(result) <= 1
         if result:
             site_fig_dict[graph_type] = result[0]
-    legend = FIGURE_DIR / LEGEND_NAME
+    legend = figure_dir / LEGEND_NAME
 
     if len(site_fig_dict):
-        # exclude weather for now, we need to add it after the legend
-        # images = [Image.open(filename) for graph_type,filename in site_fig_dict.items() if graph_type != GRAPH_WEATHER]
         image_list = []
         for graph_type, filename in site_fig_dict.items():
             with Image.open(filename) as im:
                 image_list.append(im.copy())
 
-        # add the legend
-        with Image.open(legend) as im:
-            image_list.append(im.copy())
+        # add the legend if needed
+        if include_key and os.path.exists(legend):
+            with Image.open(legend) as im:
+                image_list.append(im.copy())
 
         composite = concat_images(*image_list)
 
         final = apply_decorations_to_composite(site, composite, month_locs)
         final.save(composite_path)
     return
-

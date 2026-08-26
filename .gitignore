@@ -1,13 +1,19 @@
 .vscode/
+
+__pycache__/
+*.py[cod]
+
+*.egg-info/
+.eggs/
+
 outputs/*
 !outputs/README.md
 
 figures/*
 !figures/README.md
 
-__pycache__/
-*.pyc
+src/outputs/
+
 .venv/
-.env
 
 *.log

@@ -35,7 +35,7 @@ def read_manifest(path: Path) -> pd.DataFrame:
     Canonical columns:
         site_id, site_name,
         manual, mini_manual, edge, pattern_matching,
-        include_components, include_composite, include_key
+        include_composite, include_key
 
     Backward-compatible aliases:
         name -> site_name
@@ -44,36 +44,39 @@ def read_manifest(path: Path) -> pd.DataFrame:
     if not path.exists():
         raise FileNotFoundError(f"Manifest not found: {path}")
 
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, index_col=False)
 
-    if "site_name" not in df.columns and "name" in df.columns:
-        df = df.rename(columns={"name": "site_name"})
+    # Confirm the columns are what we expect. If not, raise an error with a helpful message.
+    expected_cols = [
+        "site_id",
+        "site_name",
+        "manual",
+        "mini_manual",
+        "edge",
+        "pattern_matching",
+        "include_composite",
+        "include_key",
+    ]
 
-    if "include_composite" not in df.columns and "composite" in df.columns:
-        df = df.rename(columns={"composite": "include_composite"})
+    if list(df.columns[: len(expected_cols)]) != expected_cols:
+        raise ValueError(
+            f"Manifest columns are not as expected. "
+            f"Expected {expected_cols}, got {list(df.columns)}"
+        )
 
-    required = {"site_id", "site_name"}
-    missing = required - set(df.columns)
-    if missing:
-        raise ValueError(f"Manifest is missing required columns: {sorted(missing)}")
+    if df["site_name"].isna().any():
+        bad_rows = df[df["site_name"].isna()].head()
+        raise ValueError(
+            "Manifest has blank site_name values. This often means rows have too many "
+            f"commas. First bad rows:\n{bad_rows}"
+        )
 
     # Add missing panel columns as false.
     for col in PANEL_COLUMNS:
         if col not in df.columns:
             df[col] = False
 
-    # Sensible defaults.
-    if "include_components" not in df.columns:
-        df["include_components"] = True
-
-    if "include_composite" not in df.columns:
-        df["include_composite"] = True
-
-    if "include_key" not in df.columns:
-        df["include_key"] = True
-
     bool_cols = PANEL_COLUMNS + [
-        "include_components",
         "include_composite",
         "include_key",
     ]
@@ -115,4 +118,3 @@ def filter_manifest(
         df = df.head(limit)
 
     return df
-

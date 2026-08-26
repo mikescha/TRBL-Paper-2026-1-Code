@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -9,6 +10,7 @@ from trbl_figures import constants as C
 from trbl_figures.data_io import load_pm_data
 
 logger = logging.getLogger(__name__)
+
 
 def normalize_pt(pt: pd.DataFrame, date_range_dict: dict) -> pd.DataFrame:
     date_range = pd.date_range(date_range_dict[C.START], date_range_dict[C.END])
@@ -36,7 +38,7 @@ def filter_df_by_tags(
         val_token = filter_str[len(op_token) :]
         threshold = float(val_token)
         cmp = C._OPS[op_token]
-    
+
         target_mask = cmp(df[target_tags], threshold).any(axis=1)
 
         if exclude_tags:
@@ -44,7 +46,6 @@ def filter_df_by_tags(
             target_mask &= ~exclude_mask
 
         return df.loc[target_mask]
-
 
 
 def make_pivot_table(
@@ -143,7 +144,6 @@ def get_pmj_detection_hours(df: pd.DataFrame) -> pd.Series:
     return df_detection_hours
 
 
-
 # Take all the PMJ data for a type of call and generate a pivot table that has the count of "detection hours" for each day during
 # "core hours" of 7a up to 8p. A detection hour is an hour in which there was a validated recording of the call, and we only
 # count one per hour to avoid biasing the data by long recording sessions.
@@ -167,7 +167,8 @@ def make_pattern_match_pt(
 
 
 def filter_to_core_hours(
-    df: pd.DataFrame, hour_col: str = "hour",
+    df: pd.DataFrame,
+    hour_col: str = "hour",
     core_start: int = C.CORE_START_HOUR,
     core_end_exclusive: int = C.CORE_END_HOUR_EXCLUSIVE,
 ) -> pd.DataFrame:
@@ -182,7 +183,7 @@ def filter_to_core_hours(
 
 
 def get_missing_days(df_site: pd.DataFrame, date_range_dict: dict) -> pd.DatetimeIndex:
-    # returns the set of days between start and end that don't have any recordings, 
+    # returns the set of days between start and end that don't have any recordings,
     # i.e. are missing from the dataset
     df_temp = df_site.copy()
     df_temp.index = pd.to_datetime(df_temp.index)
@@ -194,11 +195,14 @@ def get_missing_days(df_site: pd.DataFrame, date_range_dict: dict) -> pd.Datetim
     return missing_days
 
 
-def do_pattern_matching(site: str, date_range_dict: dict) -> tuple[pd.DataFrame, bool]:
+def do_pattern_matching(
+    site: str,
+    date_range_dict: dict,
+    data_dir: Path = C.DATA_DIR,
+) -> tuple[pd.DataFrame, bool]:
     # Load all the PM files, any errors will return an empty table. For later graphing purposes,
-    global align_dates
 
-    df_pattern_match = load_pm_data(site)
+    df_pattern_match = load_pm_data(site, data_dir=data_dir)
 
     pt_pm = pd.DataFrame()
     pm_date_range_dict = date_range_dict
@@ -228,7 +232,9 @@ def do_mini_manual(df_site: pd.DataFrame, date_range_dict: dict):
     # 2. Make a pivot table as above
     #
     df_mini_manual = filter_df_by_tags(df_site, C.MINI_MANUAL_COLS)
-    pt_mini_manual = make_pivot_table(df_mini_manual, date_range_dict, labels=C.SONG_COLS)
+    pt_mini_manual = make_pivot_table(
+        df_mini_manual, date_range_dict, labels=C.SONG_COLS
+    )
     return pt_mini_manual, not df_mini_manual.empty
 
 
@@ -247,7 +253,7 @@ def do_manual(df_site: pd.DataFrame, date_range_dict: dict):
     return pt_manual, not df_manual.empty
 
 
-#TODO fix this so it doesn't modify the original dataframe but returns a new one
+# TODO fix this so it doesn't modify the original dataframe but returns a new one
 def fix_bad_values(df: pd.DataFrame):
     """
     This function finds columns containing "---", prints a warning message,
@@ -259,7 +265,7 @@ def fix_bad_values(df: pd.DataFrame):
             df[col] = df[col].replace(-100, 0)
 
 
-#TODO is there any error checking we can do on the tags? If so, put it here
+# TODO is there any error checking we can do on the tags? If so, put it here
 def check_edge_cols_for_errors(df: pd.DataFrame, tag_map: dict) -> bool:
     error_found = False
     # Look for -100s
@@ -291,7 +297,6 @@ def do_edge(df_site: pd.DataFrame, date_range_dict: dict, site: str):
         pt_edge = pd.concat([pt_edge, pt_for_tag])
 
     return pt_edge, have_edge_data
-
 
 
 def get_recs_per_edge_day(df_site: pd.DataFrame, date_range_dict: dict) -> pd.Series:

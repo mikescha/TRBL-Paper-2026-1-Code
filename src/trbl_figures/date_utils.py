@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import pandas as pd
@@ -20,10 +19,7 @@ def is_valid_date_string(date_string):
         potential_date = potential_date.lstrip("~").rstrip("*").strip()
 
     result = pd.to_datetime(potential_date, format=DATE_FORMAT, errors="coerce")
-    if pd.isna(result):
-        return False
-    else:
-        return True
+    return not pd.isna(result)
 
 
 def is_valid_date_pair(phase_data: dict) -> bool:

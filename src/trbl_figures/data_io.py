@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 
 import pandas as pd
 
@@ -49,20 +50,25 @@ def clean_data(df: pd.DataFrame, site_list: list) -> pd.DataFrame:
 
 
 @lru_cache
-def load_summary_data() -> pd.DataFrame:
+def load_summary_data(data_dir: Path = C.DATA_DIR) -> pd.DataFrame:
     # Load the summary data and prep it for graphing.
-    df = pd.read_csv(C.INPUT_CSV, skiprows=C.ALL_SHEET_HEADER_SIZE)
+    input_csv = data_dir / C.INPUT_CSV_NAME
+    df = pd.read_csv(input_csv, skiprows=C.ALL_SHEET_HEADER_SIZE)
 
     # Convert numeric columns to integers. As above, you have to force it this way if the types vary.
     # Empty values or strings are converted to NaN
-    df[C.SUMMARY_NUMERIC_COLS] = df[C.SUMMARY_NUMERIC_COLS].apply(pd.to_numeric, errors="coerce")
-    df[C.SUMMARY_NUMERIC_COLS] = df[C.SUMMARY_NUMERIC_COLS].astype(pd.Int64Dtype())  # Keeps NaNs
+    df[C.SUMMARY_NUMERIC_COLS] = df[C.SUMMARY_NUMERIC_COLS].apply(
+        pd.to_numeric, errors="coerce"
+    )
+    df[C.SUMMARY_NUMERIC_COLS] = df[C.SUMMARY_NUMERIC_COLS].astype(
+        pd.Int64Dtype()
+    )  # Keeps NaNs
 
     return df
 
 
 @lru_cache
-def load_site_data(site: str):
+def load_site_data(site: str, data_dir: Path = C.DATA_DIR) -> pd.DataFrame:
     """
     Given a site, retrieve the data set for that
 
@@ -70,14 +76,18 @@ def load_site_data(site: str):
     :type site: str
     """
     year = site[0:4]
-    pusecols = [C.DATA_COL[C.FILENAME], C.DATA_COL[C.SITE], 
-                C.DATA_COL[C.DATE_COL], C.DATA_COL[C.HOUR]]
+    pusecols = [
+        C.DATA_COL[C.FILENAME],
+        C.DATA_COL[C.SITE],
+        C.DATA_COL[C.DATE_COL],
+        C.DATA_COL[C.HOUR],
+    ]
     for song in C.ALL_SONGS:
         pusecols.append(C.DATA_COL[song])
     for tag in C.ALL_TAGS:
         pusecols.append(C.DATA_COL[tag])
 
-    pfile_name = C.DATA_DIR / f"data {year}.parquet"
+    pfile_name = data_dir / f"data {year}.parquet"
     pusecols.append("dt")
 
     pdf = pd.read_parquet(pfile_name, columns=pusecols)
@@ -94,21 +104,19 @@ def load_pmj_subset_from_parquet(
     site: str,
     call_type: str,
     columns: list[str],
+    pmj_dir: Path,
 ) -> pd.DataFrame:
     """Load one site/call-type subset from the partitioned PMJ Parquet dataset."""
-    if not C.PMJ_DIR.exists():
+    if not pmj_dir.exists():
         return pd.DataFrame(columns=columns)
 
     # site and call_type are partition columns. They may be represented as
     # partition metadata rather than physical columns, so do not request them
     # as physical columns from the Parquet files.
-    physical_columns = [
-        col for col in columns
-        if col not in {"site", "call_type"}
-    ]
+    physical_columns = [col for col in columns if col not in {"site", "call_type"}]
 
     df = pd.read_parquet(
-        C.PMJ_DIR,
+        pmj_dir,
         columns=physical_columns,
         filters=[
             ("site", "==", site),
@@ -129,19 +137,22 @@ def load_pmj_subset_from_parquet(
     return df[columns]
 
 
-def load_pm_data(site: str) -> pd.DataFrame:
+def load_pm_data(site: str, data_dir: Path = C.DATA_DIR) -> pd.DataFrame:
     """Load PMJ detections for one site from the partitioned Parquet dataset.
 
     The Parquet dataset is partitioned by site and call_type. This replaces the
     legacy CSV layout:
 
-        PMJ Data / <site> / <site> <call_type>.csv
+        pmj_data / <site> / <site> <call_type>.csv
 
     with exact partition lookups:
 
         site == <site>
         call_type == <call_type>
     """
+
+    pmj_dir = data_dir / C.PMJ_DIR_NAME
+
     usecols = [
         C.SITE_COLS[C.SITE],
         C.SITE_COLS["year"],
@@ -156,9 +167,7 @@ def load_pm_data(site: str) -> pd.DataFrame:
 
     for t in C.PM_FILE_TYPES:
         df_single_pmj_type = load_pmj_subset_from_parquet(
-            site=site,
-            call_type=t,
-            columns=usecols,
+            site=site, call_type=t, columns=usecols, pmj_dir=pmj_dir
         )
 
         if df_single_pmj_type.empty:
@@ -186,7 +195,9 @@ def load_pm_data(site: str) -> pd.DataFrame:
             errors="coerce",
         )
 
-        df_single_pmj_type = df_single_pmj_type[df_single_pmj_type[C.DATE_COL].notna()].copy()
+        df_single_pmj_type = df_single_pmj_type[
+            df_single_pmj_type[C.DATE_COL].notna()
+        ].copy()
 
         if df_single_pmj_type.empty:
             continue
@@ -211,6 +222,6 @@ def load_pm_data(site: str) -> pd.DataFrame:
     df.set_index(C.DATE_COL, inplace=True)
 
     # TODO THIS NEEDS TO GET CHANGED BECAUSE FOR SITES THAT WERE MERGED, THEY DON'T HAVE THE SAME SITE
-    df = clean_data(df, [site])  
-    
+    df = clean_data(df, [site])
+
     return df

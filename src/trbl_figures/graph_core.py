@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 from collections import Counter
+from itertools import pairwise
+from pathlib import Path
 from typing import Any, cast
 
 import matplotlib as mpl
@@ -27,7 +29,7 @@ from trbl_figures.date_utils import convert_to_datetime
 
 logger = logging.getLogger(__name__)
 
-#TODO 2021 Markham Ravine_Composite has both manual and miniman in the new graph, but the old one just had miniman.
+# TODO 2021 Markham Ravine_Composite has both manual and miniman in the new graph, but the old one just had miniman.
 
 # Figure width and height, values in inches
 FIG_W = 6.5
@@ -56,7 +58,7 @@ CMAP_NAMES = {
     C.DATA_COL[C.ALTSONG1]: "Hatchling/Nestling/Fledgling",
 }
 
-#TODO what's up with the TBD
+# TODO what's up with the TBD
 TAG_NAME_MAP = {
     "val<Agelaius tricolor/Common Song>": "Male Song",
     "val<Agelaius tricolor/Courtship Song>": "Male Chorus",
@@ -66,6 +68,7 @@ TAG_NAME_MAP = {
     "sp22/Simple Call": "Nestling Begging Call",
     "Agelaius tricolor/Simple Call 2": "Fledgling Begging Call",
 }
+
 
 # Helper in case we want to do extra processing here
 def plot_title(fig: Figure, title: str, x: float = 0.0, y: float = 1.0):
@@ -78,6 +81,7 @@ def plot_title(fig: Figure, title: str, x: float = 0.0, y: float = 1.0):
         horizontalalignment="left",
         verticalalignment="top",
     )
+
 
 def overlay_missing_days_hatch(
     axs,
@@ -92,7 +96,7 @@ def overlay_missing_days_hatch(
 ):
     if missing_days.empty:
         return
-    
+
     for ax in axs:
         for missing_day in missing_days:
             if start_day <= missing_day <= last_day:
@@ -224,7 +228,7 @@ def draw_axis_labels(
 def calc_x_from_date(df, event_date) -> float:
     loc = df.columns.get_loc(event_date)
     if not isinstance(loc, int):
-        raise ValueError(f"Expected unique column for {event_date}, got {type(loc)}")
+        raise TypeError(f"Expected unique column for {event_date}, got {type(loc)}")
     x = float(loc)
     return x
 
@@ -297,12 +301,15 @@ def draw_event_date_marker(
             xycoords="data",
             xytext=(ARROW_LEN_PT, 0),
             textcoords="offset points",
-            arrowprops=dict(arrowstyle="->", lw=0.5, color="black", mutation_scale=7),
+            arrowprops={
+                "arrowstyle": "->",
+                "lw": 0.5,
+                "color": "black",
+                "mutation_scale": 7,
+            },
             zorder=18,
             annotation_clip=False,
         )
-        
-    return
 
 
 def add_event_date_marker(
@@ -328,7 +335,6 @@ def add_event_date_marker(
     draw_event_date_marker(
         ax, x, add_arrow=add_arrow, date_type=date_type, graph_width=graph_width
     )
-
 
 
 def get_days_per_month(date_list: list) -> dict:
@@ -376,15 +382,12 @@ def create_graph(
     df: pd.DataFrame,
     row_names: list,
     cmap: dict,
-    raw_data=pd.DataFrame(),
-    draw_vert_rects: bool = False,
+    key_dates: dict,
+    missing_days: pd.DatetimeIndex,
+    denom_by_day: pd.Series,
     draw_horiz_rects: bool = False,
     title="",
     graph_type="",
-    draw_connectors: bool = False,
-    key_dates={},
-    missing_days: pd.DatetimeIndex = pd.DatetimeIndex([]),
-    denom_by_day: pd.Series = pd.Series(),
     do_aligned_dates: bool = False,
 ) -> Figure:
     plt.close()  # close any prior graph that was open
@@ -392,10 +395,13 @@ def create_graph(
     # data cleanup -- for scenarios where the incubation date was calculated, we could have an actual number
     # although the number is earlier than the date of the first recording. To ensure this gets graphed correctly,
     # we need to update the date
-    if key_dates:
-        if "p1" in key_dates.keys() and C.PULSE_INC_START in key_dates["p1"].keys():
-            if key_dates["p1"][C.PULSE_INC_START] < key_dates[C.SUMMARY_FIRST_REC]:
-                key_dates["p1"][C.PULSE_INC_START] = convert_to_datetime("6/1/1967")
+    if (
+        key_dates != None
+        and "p1" in key_dates
+        and C.PULSE_INC_START in key_dates["p1"]
+        and key_dates["p1"][C.PULSE_INC_START] < key_dates[C.SUMMARY_FIRST_REC]
+    ):
+        key_dates["p1"][C.PULSE_INC_START] = convert_to_datetime("6/1/1967")
 
     if len(df) == 0:
         # return an empty plot if nothing to graph
@@ -500,7 +506,9 @@ def create_graph(
 
         cmap_final.set_under("white")
         no_data_color = "white" if graph_type == C.GRAPH_PM else NO_DATA_COLOR
-        cmap_final.set_bad(no_data_color)  # representing the days where analysis was not done
+        cmap_final.set_bad(
+            no_data_color
+        )  # representing the days where analysis was not done
 
         # Normalize all the data by the number of recordings that were used per day
         if graph_type == C.GRAPH_MINIMAN:
@@ -520,7 +528,7 @@ def create_graph(
         norm = colors.PowerNorm(gamma=gamma, vmin=vmin, vmax=vmax)
 
         arr = np.ma.masked_invalid(df_norm.to_numpy(dtype=float))
-        n_rows, n_cols = arr.shape
+        _, n_cols = arr.shape
 
         ax = axs[i]
         ax.imshow(
@@ -550,9 +558,8 @@ def create_graph(
             else:
                 if file_missing(site, graph_type, row):
                     label = row
-                    display_label = (
-                        TAG_NAME_MAP[label] if label in TAG_NAME_MAP.keys() else label
-                    )
+                    display_label = TAG_NAME_MAP.get(label, label)
+
                     x = (key_dates[C.SUMMARY_FIRST_REC] - df.columns[0]).days
                     add_text(axs[i], x, f"No data for {display_label}", "gray")
         elif graph_type == C.GRAPH_EDGE:
@@ -562,9 +569,9 @@ def create_graph(
         graph_drawn.append(i)
         if graph_type == C.GRAPH_PM and not do_aligned_dates:
             # Add the event markers if available
-            for pulse in key_dates:
+            for pulse, pulse_dates in key_dates.items():
                 if pulse in C.PULSES:  # Do this to skip the start/end recording dates
-                    for date_type, event_date in key_dates[pulse].items():
+                    for date_type, event_date in pulse_dates.items():
                         if (
                             row == "Male Chorus"
                             and date_type == C.PULSE_MC_START
@@ -634,7 +641,7 @@ def create_graph(
                 # For each pair of rects, draw a line between them.
                 gaps = [
                     (end1 + 1, start2 - 1)
-                    for (start1, end1), (start2, end2) in zip(borders, borders[1:])
+                    for (_, end1), (start2, _) in pairwise(borders)
                 ]
                 for start_gap, end_gap in gaps:
                     left = start_gap
@@ -739,7 +746,7 @@ def get_month_locs(cols: pd.Index) -> dict[str, list[int]]:
     return month_locs
 
 
-def draw_legend(cmap: dict, make_all_graphs: bool, save_files: bool):
+def draw_legend(cmap: dict, save_files: bool, figure_dir: Path = C.FIGURE_DIR) -> None:
     # --- Geometry (all in ax.transAxes units) ---
     BAR_X = 0.00
     BAR_Y = 0.10
@@ -852,7 +859,7 @@ def draw_legend(cmap: dict, make_all_graphs: bool, save_files: bool):
     ]
 
     ncols = len(legend_items)
-    fig, axs = plt.subplots(
+    _, axs = plt.subplots(
         nrows=1,
         ncols=ncols,
         figsize=(FIG_W * 0.8, FIG_H * 0.15),
@@ -890,6 +897,4 @@ def draw_legend(cmap: dict, make_all_graphs: bool, save_files: bool):
     plt.subplots_adjust(left=0, right=1, top=1, bottom=0, wspace=0, hspace=0)
 
     if save_files:
-        output_cmap()
-
-    return
+        output_cmap(figure_dir=figure_dir)

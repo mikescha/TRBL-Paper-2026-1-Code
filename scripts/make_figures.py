@@ -7,7 +7,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = PROJECT_ROOT / "src"
 
-from trbl_figures.publication import build_figures  # noqa: E402
+from trbl_figures.publication import build_figures
 
 DEFAULT_DATA_DIR = PROJECT_ROOT / "data"
 DEFAULT_MANIFEST = PROJECT_ROOT / "config" / "supplemental_figures.csv"
