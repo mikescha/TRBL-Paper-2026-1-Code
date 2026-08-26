@@ -1,4 +1,5 @@
 from pathlib import Path
+from time import perf_counter
 from typing import Any
 
 import pandas as pd
@@ -175,6 +176,10 @@ def build_one_site(
     data_dir: Path,
     output_dir: Path,
 ) -> dict:
+
+    # PERF
+    site_start = perf_counter()
+
     """Generate requested figure panels and composite for one site."""
     status = {
         "site_id": manifest_row.get("site_id", ""),
@@ -288,6 +293,11 @@ def build_one_site(
             status["composite"] = "generated"
         else:
             status["composite"] = "no_data"
+
+    # PERF
+    elapsed = perf_counter() - site_start
+    status["elapsed_seconds"] = round(elapsed, 2)
+    print(f"  Finished in {elapsed:.1f}s")
 
     return status
 
