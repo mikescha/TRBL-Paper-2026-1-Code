@@ -3,14 +3,9 @@ from typing import Any
 
 import pandas as pd
 
-from trbl_figures import composite, data_io, graph_core, pivots
+from trbl_figures import composite, data_io, graph_core, metadata, pivots
 from trbl_figures import constants as C
 from trbl_figures.manifest import filter_manifest, read_manifest
-from trbl_figures.metadata import (
-    build_key_dates,
-    get_publication_date_range,
-    get_site_summary_dict,
-)
 
 DEFAULT_INVENTORY_NAME = "figure_inventory.csv"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -175,14 +170,14 @@ def build_edge_panel(
 
 def build_one_site(
     site: str,
-    row: pd.Series,
-    summary_df: pd.DataFrame,
+    manifest_row: pd.Series,
+    site_info_df: pd.DataFrame,
     data_dir: Path,
     output_dir: Path,
 ) -> dict:
     """Generate requested figure panels and composite for one site."""
     status = {
-        "site_id": row.get("site_id", ""),
+        "site_id": manifest_row.get("site_id", ""),
         "site_name": site,
         "manual": "not_requested",
         "mini_manual": "not_requested",
@@ -192,29 +187,29 @@ def build_one_site(
         "error": "",
     }
 
-    df_site = data_io.load_site_data(site, data_dir=data_dir)
+    site_data_df = data_io.load_site_data(site, data_dir=data_dir)
 
-    if df_site.empty:
+    if site_data_df.empty:
         status["error"] = "No source data found for site"
         return status
 
-    df_core = pivots.filter_to_core_hours(df_site, hour_col=C.HOUR)
+    core_hours_only_df = pivots.filter_to_core_hours(site_data_df, hour_col=C.HOUR)
 
-    rec_norm = df_core.groupby(level=C.DATE_COL)["core_hour"].nunique()
+    rec_norm = core_hours_only_df.groupby(level=C.DATE_COL)["core_hour"].nunique()
 
-    site_summary_dict = get_site_summary_dict(site, summary_df)
+    site_summary_dict = metadata.process_site_summary_data(site_info_df)
 
-    date_range_dict = get_publication_date_range(
+    date_range_dict = metadata.get_publication_date_range(
         site_summary_dict=site_summary_dict,
     )
 
-    missing_days = pivots.get_missing_days(df_core, date_range_dict)
+    missing_days = pivots.get_missing_days(core_hours_only_df, date_range_dict)
 
-    key_dates = build_key_dates(site_summary_dict)
+    key_dates = metadata.build_key_dates(site_summary_dict)
 
     month_locs = {}
 
-    if should_build_panel(row, "pattern_matching"):
+    if should_build_panel(manifest_row, "pattern_matching"):
         panel_status, pt = build_pattern_matching_panel(
             site=site,
             date_range_dict=date_range_dict,
@@ -229,10 +224,10 @@ def build_one_site(
         if pt is not None and not month_locs:
             month_locs = graph_core.get_month_locs(pt.columns)
 
-    if should_build_panel(row, "mini_manual"):
+    if should_build_panel(manifest_row, "mini_manual"):
         panel_status, pt = build_mini_manual_panel(
             site=site,
-            df_core=df_core,
+            df_core=core_hours_only_df,
             date_range_dict=date_range_dict,
             key_dates=key_dates,
             missing_days=missing_days,
@@ -243,10 +238,10 @@ def build_one_site(
         if pt is not None and not month_locs:
             month_locs = graph_core.get_month_locs(pt.columns)
 
-    if should_build_panel(row, "manual"):
+    if should_build_panel(manifest_row, "manual"):
         panel_status, pt = build_manual_panel(
             site=site,
-            df_core=df_core,
+            df_core=core_hours_only_df,
             date_range_dict=date_range_dict,
             key_dates=key_dates,
             missing_days=missing_days,
@@ -258,10 +253,10 @@ def build_one_site(
         if pt is not None and not month_locs:
             month_locs = graph_core.get_month_locs(pt.columns)
 
-    if should_build_panel(row, "edge"):
+    if should_build_panel(manifest_row, "edge"):
         panel_status, pt = build_edge_panel(
             site=site,
-            df_core=df_core,
+            df_core=core_hours_only_df,
             date_range_dict=date_range_dict,
             key_dates=key_dates,
             missing_days=missing_days,
@@ -272,9 +267,9 @@ def build_one_site(
         if pt is not None and not month_locs:
             month_locs = graph_core.get_month_locs(pt.columns)
 
-    if row["include_composite"]:
+    if manifest_row["include_composite"]:
         if month_locs:
-            if row["include_key"]:
+            if manifest_row["include_key"]:
                 graph_core.draw_legend(
                     C.CMAP,
                     save_files=True,
@@ -283,10 +278,11 @@ def build_one_site(
 
             composite.combine_unaligned_images(
                 site=site,
+                pretty_name=site_info_df["Pretty Site Name"].item(),
                 month_locs=month_locs,
                 figure_dir=output_dir,
                 align_dates=False,
-                include_key=row["include_key"],
+                include_key=manifest_row["include_key"],
             )
 
             status["composite"] = "generated"
@@ -340,8 +336,8 @@ def build_figures(
 
     if dry_run:
         print("\nDry run only. Sites that would be processed:")
-        for _, row in manifest_df.iterrows():
-            print(f"  - {row['site_id']}: {row['site_name']}")
+        for _, manifest_row in manifest_df.iterrows():
+            print(f"  - {manifest_row['site_id']}: {manifest_row['site_name']}")
 
         return pd.DataFrame()
 
@@ -349,17 +345,18 @@ def build_figures(
 
     results = []
 
-    for _, row in manifest_df.iterrows():
-        site = str(row["site_name"])
+    for _, manifest_row in manifest_df.iterrows():
+        site = str(manifest_row["site_name"])
         print(
             f"\n[{len(results) + 1}/{len(manifest_df)}] Generating figures for {site}..."
         )
 
         try:
+            site_df = metadata.get_site(site, summary_df)
             result = build_one_site(
                 site=site,
-                row=row,
-                summary_df=summary_df,
+                manifest_row=manifest_row,
+                site_info_df=site_df,
                 data_dir=data_dir,
                 output_dir=output_dir,
             )
@@ -369,7 +366,7 @@ def build_figures(
                 raise
 
             result = {
-                "site_id": row.get("site_id", ""),
+                "site_id": manifest_row.get("site_id", ""),
                 "site_name": site,
                 "manual": "error",
                 "mini_manual": "error",

@@ -191,6 +191,16 @@ def get_site_summary_dict(site: str, summary_df: pd.DataFrame) -> dict:
     return process_site_summary_data(summary_row)
 
 
+def get_site(site: str, all_df: pd.DataFrame) -> pd.DataFrame:
+    """Return the processed All.csv summary dictionary for one site."""
+    site_row = all_df[all_df.iloc[:, 1] == site]
+
+    if site_row.empty:
+        raise ValueError(f"Site {site!r} was not found in All.csv.")
+
+    return site_row
+
+
 def build_key_dates(site_summary_dict: dict) -> dict:
     """Build the key-date dictionary expected by create_graph."""
     key_dates: dict[str, Any] = {}
@@ -271,3 +281,14 @@ def get_publication_date_range(
         "start": start.date(),
         "end": end.date(),
     }
+
+
+# TODO I don't think this is needed, delete if so
+# def get_pretty_site_name(site_summary_dict: dict, fallback_site_name: str) -> str:
+#     """Return the display name for a site used in composite figure headers."""
+#     pretty_name = site_summary_dict.get("Pretty Site Name")
+
+#     if pretty_name is None or pd.isna(pretty_name) or str(pretty_name).strip() == "":
+#         return fallback_site_name
+
+#     return str(pretty_name).strip()

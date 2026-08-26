@@ -187,7 +187,7 @@ def concat_images(*images: Image.Image, is_legend: bool = False) -> Image.Image:
 
 
 def apply_decorations_to_composite(
-    site: str, composite: Image.Image, month_locs: dict
+    pretty_name: str, composite: Image.Image, month_locs: dict
 ) -> Image.Image:
     scale = C.DPI / 300
 
@@ -221,10 +221,9 @@ def apply_decorations_to_composite(
     # Add the title
     draw = ImageDraw.Draw(final)
     font = ImageFont.truetype(font_path, size=title_font_size)
-    graph_title = get_pretty_name_for_site(site)
     draw.text(
         (width / 2, title_height - fudge),
-        graph_title,
+        pretty_name,
         fill="black",
         anchor="ms",
         font=font,
@@ -294,6 +293,7 @@ def wrap_text(
 # and then save that out
 def combine_unaligned_images(
     site: str,
+    pretty_name: str,
     month_locs: dict,
     figure_dir: Path,
     align_dates: bool = False,
@@ -341,6 +341,6 @@ def combine_unaligned_images(
 
         composite = concat_images(*image_list)
 
-        final = apply_decorations_to_composite(site, composite, month_locs)
+        final = apply_decorations_to_composite(pretty_name, composite, month_locs)
         final.save(composite_path)
     return
