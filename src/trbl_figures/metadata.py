@@ -281,14 +281,3 @@ def get_publication_date_range(
         "start": start.date(),
         "end": end.date(),
     }
-
-
-# TODO I don't think this is needed, delete if so
-# def get_pretty_site_name(site_summary_dict: dict, fallback_site_name: str) -> str:
-#     """Return the display name for a site used in composite figure headers."""
-#     pretty_name = site_summary_dict.get("Pretty Site Name")
-
-#     if pretty_name is None or pd.isna(pretty_name) or str(pretty_name).strip() == "":
-#         return fallback_site_name
-
-#     return str(pretty_name).strip()

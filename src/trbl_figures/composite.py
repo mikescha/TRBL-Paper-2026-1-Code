@@ -2,11 +2,9 @@ from __future__ import annotations
 
 import glob
 import os
-from functools import lru_cache
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import pandas as pd
 from matplotlib.figure import Figure
 from matplotlib.transforms import Bbox
 from PIL import Image, ImageDraw, ImageFont
@@ -58,33 +56,6 @@ def remove_file(full_path: Path) -> bool:
         print(f"Error {e} trying to remove file {full_path}")
         result = False
     return result
-
-
-# TODO This needs optimizing
-@lru_cache
-def load_all_file():
-    return pd.read_csv(C.INPUT_CSV, skiprows=C.ALL_SHEET_HEADER_SIZE)
-
-
-def get_site_info(site_name: str, site_info_fields: list) -> dict:
-    site_info = {}
-    df = load_all_file()
-
-    # Make a dictionary, where the keys are in site_info_fields and the values are the values from the
-    # site info file in the columns that match site_info_fields, for the site==site_name
-    if site_name in df["Name"].values:
-        site_info = df.loc[df["Name"] == site_name, site_info_fields].iloc[0].to_dict()
-        site_info = {
-            k: ("N/A" if pd.isna(v) else v) for k, v in site_info.items()
-        }  # Replace NaN
-
-    return site_info
-
-
-def get_pretty_name_for_site(site: str) -> str:
-    name_column = "Pretty Site Name"
-    name_dict = get_site_info(site, [name_column])
-    return name_dict[name_column]
 
 
 # Save the graphic to a different folder. All file-related options are managed from here.
