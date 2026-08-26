@@ -117,4 +117,5 @@ def filter_manifest(
     if limit is not None:
         df = df.head(limit)
 
+    df = df.sort_values("site_name").reset_index(drop=True)
     return df

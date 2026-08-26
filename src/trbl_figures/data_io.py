@@ -67,8 +67,36 @@ def load_summary_data(data_dir: Path = C.DATA_DIR) -> pd.DataFrame:
     return df
 
 
-@lru_cache
-def load_site_data(site: str, data_dir: Path = C.DATA_DIR) -> pd.DataFrame:
+def get_source_data_columns() -> list[str]:
+    """Return the list of columns in the source data files."""
+    return [
+        C.DATA_COL[C.FILENAME],
+        C.DATA_COL[C.SITE],
+        C.DATA_COL[C.DATE_COL],
+        C.DATA_COL[C.HOUR],
+        *[C.DATA_COL[s] for s in C.ALL_SONGS],
+        *[C.DATA_COL[t] for t in C.ALL_TAGS],
+        C.DATETIME_COL,
+    ]
+
+
+@lru_cache(maxsize=8)
+def load_year_data_cached(year: str, data_dir_text: str) -> pd.DataFrame:
+    """Load one year of source recording data.
+
+    The cache avoids rereading data YYYY.parquet once for every site.
+    """
+    data_dir = Path(data_dir_text)
+    parquet_path = data_dir / f"data {year}.parquet"
+
+    if not parquet_path.exists():
+        raise FileNotFoundError(f"Yearly data file not found: {parquet_path}")
+
+    usecols = get_source_data_columns()
+    return pd.read_parquet(parquet_path, columns=usecols)
+
+
+def load_site_data(site: str, data_dir: Path) -> pd.DataFrame:
     """
     Given a site, retrieve the data set for that
 
@@ -76,84 +104,44 @@ def load_site_data(site: str, data_dir: Path = C.DATA_DIR) -> pd.DataFrame:
     :type site: str
     """
     year = site[0:4]
-    pusecols = [
-        C.DATA_COL[C.FILENAME],
-        C.DATA_COL[C.SITE],
-        C.DATA_COL[C.DATE_COL],
-        C.DATA_COL[C.HOUR],
-    ]
-    for song in C.ALL_SONGS:
-        pusecols.append(C.DATA_COL[song])
-    for tag in C.ALL_TAGS:
-        pusecols.append(C.DATA_COL[tag])
 
-    pfile_name = data_dir / f"data {year}.parquet"
-    pusecols.append("dt")
-
-    pdf = pd.read_parquet(pfile_name, columns=pusecols)
-    pdf = pdf[pdf[C.SITE] == site]
-    pdf = pdf.set_index("dt")
-    pdf.index = pd.DatetimeIndex(pdf.index).normalize()
-    df = clean_data(pdf, [site])
-    df = df.rename_axis(C.DATE_COL)
-
-    return df
-
-
-def load_pmj_subset_from_parquet(
-    site: str,
-    call_type: str,
-    columns: list[str],
-    pmj_dir: Path,
-) -> pd.DataFrame:
-    """Load one site/call-type subset from the partitioned PMJ Parquet dataset."""
-    if not pmj_dir.exists():
-        return pd.DataFrame(columns=columns)
-
-    # site and call_type are partition columns. They may be represented as
-    # partition metadata rather than physical columns, so do not request them
-    # as physical columns from the Parquet files.
-    physical_columns = [col for col in columns if col not in {"site", "call_type"}]
-
-    df = pd.read_parquet(
-        pmj_dir,
-        columns=physical_columns,
-        filters=[
-            ("site", "==", site),
-            ("call_type", "==", call_type),
-        ],
+    year_df = load_year_data_cached(
+        year=year,
+        data_dir_text=str(data_dir.resolve()),
     )
+    # Important: use a copy so downstream filtering/mutation does not alter
+    # the cached year-level dataframe.
+    site_df = year_df[year_df[C.SITE] == site].copy()
 
-    if "site" in columns:
-        df["site"] = site
+    if site_df.empty:
+        return site_df
 
-    if "call_type" in columns:
-        df["call_type"] = call_type
+    if C.DATETIME_COL not in site_df.columns:
+        raise ValueError(
+            f"Expected column {C.DATETIME_COL!r} in source data for site {site!r}."
+        )
 
-    for col in columns:
-        if col not in df.columns:
-            df[col] = pd.NA
+    site_df[C.DATETIME_COL] = pd.to_datetime(site_df[C.DATETIME_COL]).dt.normalize()
+    site_df = site_df.set_index(C.DATETIME_COL)
+    site_df.index.name = C.DATE_COL
 
-    return df[columns]
+    site_df = clean_data(site_df, [site])
+
+    return site_df.copy()
 
 
-def load_pm_data(site: str, data_dir: Path = C.DATA_DIR) -> pd.DataFrame:
-    """Load PMJ detections for one site from the partitioned Parquet dataset.
+#
+#
+# PMJ Data loading functions. The PMJ data is stored in a partitioned Parquet dataset,
+# with one partition per site and call type. The following functions provide a convenient
+# interface for loading subsets of the PMJ data.
+#
+#
 
-    The Parquet dataset is partitioned by site and call_type. This replaces the
-    legacy CSV layout:
 
-        pmj_data / <site> / <site> <call_type>.csv
-
-    with exact partition lookups:
-
-        site == <site>
-        call_type == <call_type>
-    """
-
-    pmj_dir = data_dir / C.PMJ_DIR_NAME
-
-    usecols = [
+def get_pmj_columns() -> list[str]:
+    """Return the list of columns in the PMJ data files."""
+    return [
         C.SITE_COLS[C.SITE],
         C.SITE_COLS["year"],
         C.SITE_COLS["month"],
@@ -162,56 +150,79 @@ def load_pm_data(site: str, data_dir: Path = C.DATA_DIR) -> pd.DataFrame:
         C.SITE_COLS[C.VALIDATED_STR],
     ]
 
-    out_cols = [*usecols, C.DATE_COL, "type"]
-    frames: list[pd.DataFrame] = []
 
-    for t in C.PM_FILE_TYPES:
-        df_single_pmj_type = load_pmj_subset_from_parquet(
-            site=site, call_type=t, columns=usecols, pmj_dir=pmj_dir
-        )
+def _load_pm_data_uncached(site: str, data_dir: Path = C.DATA_DIR) -> pd.DataFrame:
+    """Load PMJ detections for one site from the partitioned Parquet dataset.
 
-        if df_single_pmj_type.empty:
-            # Preserve the legacy behavior: missing/empty call types simply add
-            # no rows, but downstream code still receives a well-shaped frame.
-            continue
+    The Parquet dataset is partitioned by site and call_type. This function reads
+    all requested PMJ call types for the site in one Parquet query, then performs
+    the same shaping expected by downstream graph code.
+    """
+    pmj_dir = data_dir / C.PMJ_DIR_NAME
 
-        missing = set(usecols) - set(df_single_pmj_type.columns)
-        if missing:
-            raise ValueError(
-                f"Missing columns in PMJ Parquet subset for site={site!r}, "
-                f"call_type={t!r}: {sorted(missing)}"
-            )
-
-        df_single_pmj_type = df_single_pmj_type.copy()
-
-        df_single_pmj_type[C.DATE_COL] = pd.to_datetime(
-            df_single_pmj_type[
-                [
-                    C.SITE_COLS["year"],
-                    C.SITE_COLS["month"],
-                    C.SITE_COLS["day"],
-                ]
-            ],
-            errors="coerce",
-        )
-
-        df_single_pmj_type = df_single_pmj_type[
-            df_single_pmj_type[C.DATE_COL].notna()
-        ].copy()
-
-        if df_single_pmj_type.empty:
-            continue
-
-        df_single_pmj_type["type"] = t
-
-        # Preserve the old broad dtype behavior to avoid downstream surprises.
-        df_single_pmj_type = df_single_pmj_type[out_cols].astype("object")
-        frames.append(df_single_pmj_type)
-
-    if not frames:
+    if not pmj_dir.exists():
         return empty_pm_data_frame()
 
-    df = pd.concat(frames, ignore_index=True)
+    usecols = get_pmj_columns()
+    out_cols = [*usecols, C.DATE_COL, "type"]
+
+    # "site" is a partition column and is added manually below. "call_type" is
+    # needed so we can create the legacy "type" column.
+    read_cols = [col for col in usecols if col not in {"site", C.SITE}]
+    read_cols.append("call_type")
+    read_cols = list(dict.fromkeys(read_cols))
+
+    df = pd.read_parquet(
+        pmj_dir,
+        columns=read_cols,
+        filters=[("site", "==", site)],
+    )
+
+    if df.empty:
+        return empty_pm_data_frame()
+
+    if "call_type" not in df.columns:
+        raise ValueError(
+            f"Expected PMJ partition column 'call_type' for site={site!r}."
+        )
+
+    df = df[df["call_type"].isin(C.PM_FILE_TYPES)].copy()
+
+    if df.empty:
+        return empty_pm_data_frame()
+
+    # Preserve the legacy shape expected by downstream code.
+    if "site" in usecols:
+        df["site"] = site
+
+    missing = set(usecols) - set(df.columns)
+    if missing:
+        raise ValueError(
+            f"Missing columns in PMJ Parquet subset for site={site!r}: "
+            f"{sorted(missing)}"
+        )
+
+    df[C.DATE_COL] = pd.to_datetime(
+        df[
+            [
+                C.SITE_COLS["year"],
+                C.SITE_COLS["month"],
+                C.SITE_COLS["day"],
+            ]
+        ],
+        errors="coerce",
+    )
+
+    df = df[df[C.DATE_COL].notna()].copy()
+
+    if df.empty:
+        return empty_pm_data_frame()
+
+    df["type"] = df["call_type"]
+
+    # Keep this for now to preserve old downstream behavior. We can test removing
+    # it later as a separate optimization.
+    df = df[out_cols]
 
     df[C.DATE_COL] = pd.to_datetime(df[C.DATE_COL], errors="coerce")
     df = df[df[C.DATE_COL].notna()].copy()
@@ -221,7 +232,13 @@ def load_pm_data(site: str, data_dir: Path = C.DATA_DIR) -> pd.DataFrame:
 
     df.set_index(C.DATE_COL, inplace=True)
 
-    # TODO THIS NEEDS TO GET CHANGED BECAUSE FOR SITES THAT WERE MERGED, THEY DON'T HAVE THE SAME SITE
+    # TODO: This still assumes the PMJ site name matches the summary site name.
+    # Merged sites may need explicit alias handling later.
     df = clean_data(df, [site])
 
     return df
+
+
+def load_pm_data(site: str, data_dir: Path = C.DATA_DIR) -> pd.DataFrame:
+    """Load PMJ detections for one site from the partitioned Parquet dataset."""
+    return _load_pm_data_uncached(site=site, data_dir=data_dir)

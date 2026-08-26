@@ -20,6 +20,7 @@ ALL_SHEET_HEADER_SIZE = 2  # number of rows to skip over in the All file
 
 # Columns
 DATE_COL = "date"
+DATETIME_COL = "dt"
 SITE = "site"
 SITE_COLS = {
     "id": "id",

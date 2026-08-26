@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from trbl_figures import constants as C
-from trbl_figures.data_io import load_pm_data
+from trbl_figures import data_io
 
 logger = logging.getLogger(__name__)
 
@@ -202,7 +202,7 @@ def do_pattern_matching(
 ) -> tuple[pd.DataFrame, bool]:
     # Load all the PM files, any errors will return an empty table. For later graphing purposes,
 
-    df_pattern_match = load_pm_data(site, data_dir=data_dir)
+    df_pattern_match = data_io.load_pm_data(site, data_dir=data_dir)
 
     pt_pm = pd.DataFrame()
     pm_date_range_dict = date_range_dict
