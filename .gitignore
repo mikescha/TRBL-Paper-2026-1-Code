@@ -17,3 +17,5 @@ src/outputs/
 .venv/
 
 *.log
+
+.ruff_cache/
