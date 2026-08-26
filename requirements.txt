@@ -1,6 +1,16 @@
-streamlit>=1.58.0
-pandas>=3.0.3
-numpy>=2.4.6
-pillow>=12.2.0
-matplotlib>=3.10
-pyarrow>=24.0.0
+contourpy==1.3.3
+cycler==0.12.1
+fonttools==4.63.0
+kiwisolver==1.5.0
+matplotlib==3.11.1
+numpy==2.5.2
+packaging==26.3
+pandas==3.0.5
+pillow==12.3.0
+pyarrow==25.0.1
+pyparsing==3.3.2
+python-dateutil==2.9.0.post0
+ruff==0.16.4
+six==1.17.0
+-e git+https://github.com/mikescha/TRBL-Paper-2026-1-Code.git@5d0453b1a4f314b8ef0d015048c386d79fa1170d#egg=trbl_paper_2026_1_code
+tzdata==2026.3

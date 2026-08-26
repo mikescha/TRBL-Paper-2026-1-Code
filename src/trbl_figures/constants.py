@@ -12,7 +12,6 @@ INPUT_CSV = DATA_DIR / INPUT_CSV_NAME
 PMJ_DIR_NAME = "pmj_data"
 PMJ_DIR = DATA_DIR / PMJ_DIR_NAME
 FIGURE_DIR = PROJECT_ROOT / "figures"
-ERROR_FILE = PROJECT_ROOT / "outputs" / "grapher_errors.txt"
 HOURLY_PARQUET_FILES = DATA_DIR / "recordings_per_day_hour.parquet"
 SHARING_OUTPUT_DIR = PROJECT_ROOT / "outputs" / "sharing"
 # SHARING_OUTPUT_DIR = Path(r"G:\My Drive\TRBL for Wendy GDrive")
