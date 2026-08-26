@@ -117,14 +117,13 @@ def save_figure(
             fig_w,  # width
             fig_h - trim_amount_in,  # height
         )
-        plt.savefig(cleaned_figure_path, dpi="figure", bbox_inches=bbox_inches)
-        # save_with_reserved_margin(graph, cleaned_figure_path, dpi="figure", bottom_pad_in=trim_amount_in)
+        graph.savefig(cleaned_figure_path, dpi="figure", bbox_inches=bbox_inches)
 
     else:
         # TODO If there is no data, what to do? The line below saves an empty image.
         pass
 
-    plt.close()
+    plt.close(graph)
 
 
 def concat_images(*images: Image.Image, is_legend: bool = False) -> Image.Image:
