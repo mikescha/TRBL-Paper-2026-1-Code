@@ -12,17 +12,16 @@ from PIL import Image, ImageDraw, ImageFont
 from trbl_figures import constants as C
 
 LEGEND_NAME = "legend.png"
-FIGURE_DIR = C.PROJECT_ROOT / "figures"
 
 # Each type of file we're combining
-GRAPH_SUMMARY = "Summary"
+GRAPH_COMPOSITE = "Composite"
 GRAPH_MANUAL = "Manual Analysis"
 GRAPH_MINIMAN = "MiniMan"
 GRAPH_EDGE = "Edge Analysis"
 GRAPH_PM = "Pattern Matching Analysis"
 GRAPH_WEATHER = "Weather"
 GRAPH_TYPES = [
-    GRAPH_SUMMARY,
+    GRAPH_COMPOSITE,
     GRAPH_PM,
     GRAPH_MANUAL,
     GRAPH_MINIMAN,
@@ -31,7 +30,7 @@ GRAPH_TYPES = [
 ]
 
 
-def output_cmap(figure_dir: Path = FIGURE_DIR) -> None:
+def output_cmap(figure_dir: Path) -> None:
     # Save the legend if one doesn't exist; if I update the code, need to delete the file to regenerate it
     figure_path = figure_dir / LEGEND_NAME
     if not os.path.exists(figure_path):
